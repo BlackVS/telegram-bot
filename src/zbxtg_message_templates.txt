@@ -1,0 +1,29 @@
+Operations
+----------------------------------------
+Default subject:
+
+Zabbix: {TRIGGER.STATUS}: {TRIGGER.NAME}
+
+Default message:
+
+zbxtg:graph={
+"title": "{HOST.HOST} - {TRIGGER.NAME}",
+"itemid":{ITEM.ID1}
+}
+
+
+
+
+Recovery operations
+----------------------------------------
+Default subject:
+
+Zabbix: {TRIGGER.STATUS}: {TRIGGER.NAME}
+
+Default message:
+
+zbxtg:graph={
+"title": "{HOST.HOST} - {TRIGGER.NAME}",
+"itemid":{ITEM.ID1}
+}
+
