@@ -24,6 +24,7 @@ but script is fully rewritten/made simpler to meet own needs.
    You can do it via console using commands:
    ```bash
    wget https://raw.githubusercontent.com/BlackVS/zabbix-telegram/master/src/zbxtg.py
+   chmod a+x zbxtg.py
    wget https://raw.githubusercontent.com/BlackVS/zabbix-telegram/master/src/zbxtg_settings.py
    ```
 3. Update `zbxtg_settings.py` with your settings (see below), at least:
