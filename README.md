@@ -26,6 +26,7 @@ but script is fully rewritten/made simpler to meet own needs.
    wget https://raw.githubusercontent.com/BlackVS/zabbix-telegram/master/src/zbxtg.py
    chmod a+x zbxtg.py
    wget https://raw.githubusercontent.com/BlackVS/zabbix-telegram/master/src/zbxtg_settings.py
+   wget https://raw.githubusercontent.com/BlackVS/zabbix-telegram/master/src/zbxtg_test.py
    ```
 3. Update `zbxtg_settings.py` with your settings (see below), at least:
    * bot API
