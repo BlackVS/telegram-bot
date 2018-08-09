@@ -23,6 +23,7 @@ but script is fully rewritten/made simpler to meet own needs.
    * **zbxtg_test.py** - test script
    You can do it via console using commands:
    ```bash
+   apt install python-pip
    wget https://raw.githubusercontent.com/BlackVS/zabbix-telegram/master/src/zbxtg.py
    chmod a+x zbxtg.py
    wget https://raw.githubusercontent.com/BlackVS/zabbix-telegram/master/src/zbxtg_settings.py
