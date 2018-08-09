@@ -15,9 +15,9 @@ import zbxtg_settings
 logger = None
 
 COLORS = [
-   ("e6194b", "Red"),	     
    ("3cb44b", "Green"),
    ("ffe119", "Yellow"),
+   ("e6194b", "Red"),	     
    ("0082c8", "Blue"),
    ("f58231", "Orange"), 
    ("911eb4", "Purple"),
@@ -114,13 +114,14 @@ class ZabbixAPI:
 
         zbx_img_url_itemids = []
         for i,ids in enumerate(itemids):
-            itemid_url = "&items[{0}][itemid]={1}&items[{0}][sortorder]={0}&items[{0}][drawtype]={3}&items[{0}][color]={2}".format(i, ids, COLORS[i], drawtype)
+            itemid_url = "&items[{0}][itemid]={1}&items[{0}][sortorder]={0}&items[{0}][drawtype]={3}&items[{0}][color]={2}".format(i, ids, COLORS[i][0], drawtype)
             zbx_img_url_itemids.append(itemid_url)
 
         zbx_img_url = self.server + "/chart3.php?period={0}&name={1}&width={2}&height={3}&graphtype=0&legend=1".format(period, title, width, height)
         zbx_img_url += "".join(zbx_img_url_itemids)
 
-        logger.debug("Getting prath from Zabbix: {}".format(zbx_img_url))
+        logger.debug("Getting grapth from Zabbix: {}".format(zbx_img_url))
+        logger.debug(" to:{}".format(fileURL))
         answer = requests.get( zbx_img_url, 
                                cookies=self.cookie, 
                                verify=self.verify, 
@@ -282,6 +283,7 @@ class TelegramAPI:
             params["parse_mode"]=mode
 
         files = {"photo": open(imageURL, 'rb')}
+        logger.debug("files={}".format(files))
         answer = requests.post(url, params=params, files=files)
         self.last_result = answer
         res=answer.status_code == 200
