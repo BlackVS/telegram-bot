@@ -105,3 +105,5 @@ venv.bak/
 
 #VS
 .vs/
+zbxtg_settings_test.py
+zbxtg_settings.py
