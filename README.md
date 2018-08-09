@@ -65,8 +65,8 @@ I created corerspondent **Read-only** group and gave to it next rights:
 Host group : All groups	
 Permissions: Read
 ```
-or you risk to get such message instead of graphs:
-![alt text](https://github.com/BlackVS/zabbix-telegram/raw/master/images/zabbix-api-permissions.jpg "Zabbix API permissions")
+or you risk to get such message instead of graphs:</br>
+![alt text](https://github.com/BlackVS/zabbix-telegram/raw/master/images/zabbix-api-permissions.jpg "Zabbix API permissions")</br>
 It happens due to read-only user may not have rights to access all items.
 #### zabbix_api_pass
 Password of read-only Zabbix user (i.e. **api** user)
