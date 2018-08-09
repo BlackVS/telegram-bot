@@ -19,14 +19,15 @@ but script is fully rewritten/made simpler to meet own needs.
 2. Put next files in your `AlertScriptsPath` directory (you can find this path in your **zabbix_server.conf**, by default
   `/usr/lib/zabbix/alertscripts` ):
    * **zbxtg.py** - main script
-   * **zbxtg_settings.py** - script settings
+   * **zbxtg_settings.template** - script settings
    * **zbxtg_test.py** - test script
    You can do it via console using commands:
    ```bash
    apt install python-pip
    wget https://raw.githubusercontent.com/BlackVS/zabbix-telegram/master/src/zbxtg.py
    chmod a+x zbxtg.py
-   wget https://raw.githubusercontent.com/BlackVS/zabbix-telegram/master/src/zbxtg_settings.py
+   wget https://raw.githubusercontent.com/BlackVS/zabbix-telegram/master/src/zbxtg_settings.template
+   mv zbxtg_settings.template zbxtg_settings.py
    wget https://raw.githubusercontent.com/BlackVS/zabbix-telegram/master/src/zbxtg_test.py
    ```
 3. Create temp dir and allow Zabbix to write to it. By default temp directory is `/tmp/zbxtg` i.e.
@@ -57,6 +58,12 @@ URL of your Zabbix server in form `http::/server`
 #### zabbix_api_user
 From security reasons better to have separate read-only Zabbix user for accessing Zabbix API.
 Just create read-only user (in my case named as **api**)
+**Important!** This API user MUST have read-only access to ALL Zabbix objects.
+I created corerspondent **Read-only** group and gave to it next rights:
+```
+Host group : All groups	
+Permissions: Read
+```
 #### zabbix_api_pass
 Password of read-only Zabbix user (i.e. **api** user)
 #### zabbix_api_verify
