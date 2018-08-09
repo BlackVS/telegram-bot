@@ -29,6 +29,7 @@ but script is fully rewritten/made simpler to meet own needs.
    wget https://raw.githubusercontent.com/BlackVS/zabbix-telegram/master/src/zbxtg_settings.template
    mv zbxtg_settings.template zbxtg_settings.py
    wget https://raw.githubusercontent.com/BlackVS/zabbix-telegram/master/src/zbxtg_test.py
+   chmod a+x zbxtg_test.py
    ```
 3. Create temp dir and allow Zabbix to write to it. By default temp directory is `/tmp/zbxtg` i.e.
 ```
