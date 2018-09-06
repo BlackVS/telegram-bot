@@ -10,7 +10,8 @@ import copy
 from collections import defaultdict
 #
 import zbxtg_settings
-
+#
+import telegram
 
 logger = None
 
@@ -147,33 +148,38 @@ class ZabbixAPI:
         return api.text
 
 
-class TelegramAPI:
-    tg_api_url   = "https://api.telegram.org/bot"
-    tg_botAPIkey = None
-    last_result  = None
-    
-    def __init__(self, key):
-        self.tg_botAPIkey = key
+class Zbx2Tg(object):
 
-    def httpGet(self, url):
-        answer = requests.get(url)
-        return answer.json()
+    isInited = False
+    bot = None
 
-    def getAPI(self):
-        return  self.tg_api_url + self.tg_botAPIkey
+    def __init__(self, debug=False):
+        global logger
+        #
+        log_file = "{0}/{1}.log".format(zbxtg_settings.zbxtg_log_dir, zbxtg_settings.zbxtg_keyword)
+        logging.basicConfig(level=(logging.INFO,logging.DEBUG)[debug])
+        self.toDebug = debug
+        logger = logging.getLogger("Zbx2Tg")
+        # create file handler which logs even debug messages
+        # fh = logging.FileHandler(log_file)
+        fh = logging.handlers.RotatingFileHandler(log_file, mode='a', maxBytes=10*1024*1024, backupCount=5, encoding=None, delay=0)
+        fh.setLevel((logging.INFO,logging.DEBUG)[debug])
+        # create console handler with a higher log level
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.ERROR)
+        # create formatter and add it to the handlers
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        fh.setFormatter(formatter)
+        ch.setFormatter(formatter)
+        # add the handlers to the logger
+        logger.addHandler(fh)
+        logger.addHandler(ch)
+        logger.debug("Starting Zbx2Tg script...")
+        #
+        self.isInited = True
 
-    def formatMsgAsHTML(self,subject,text="",separator=" : "):
-        global settings
-        format=settings.msg_subject_format_HTML+separator+"{1}"
-        return format.format(subject,text,separator)
-
-    def formatMsgAsMarkdown(self,subject,text="",separator=" : "):
-        global settings
-        format=settings.msg_subject_format_Markdown+separator+"{1}"
-        return format.format(subject,text,separator)
-
-
-    def getPhotoFromZabbix(self,params):
+    @staticmethod
+    def getPhotoFromZabbix(params):
         global settings
 
         #try get image from Zabbix
@@ -189,10 +195,31 @@ class TelegramAPI:
                                     settings.graph_height)
         return imageFile
 
+    @staticmethod
+    def formatMsgAsHTML(subject,text="",separator=" : "):
+        global settings
+        format=settings.msg_subject_format_HTML+separator+"{1}"
+        return format.format(subject,text,separator)
+
+    @staticmethod
+    def formatMsgAsMarkdown(subject,text="",separator=" : "):
+        global settings
+        format=settings.msg_subject_format_Markdown+separator+"{1}"
+        return format.format(subject,text,separator)
+
+    @staticmethod
+    def formatMsg(subject,text,separator):
+        global settings
+        mode=settings.msg_mode
+        if mode==TG_MSG_MODE_HTML:
+            return Zbx2Tg.formatMsgAsHTML(subject,text,separator)
+        elif mode==TG_MSG_MODE_MARKDOWN:
+            return Zbx2Tg.formatMsgAsMarkdown(subject,text,separator)
+        return "[{0}]:\n{1}".format(subject,text)
+
     def sendMessage(self, to, subject, text):
         global logger
         global settings
-        #text=textIn.copy()
 
         messages=[]
 
@@ -240,125 +267,48 @@ class TelegramAPI:
                 text=text[token_e:].strip()
 
         #send
+        bot = telegram.Bot(token=zbxtg_settings.botAPIkey)
+        if not bot: 
+            return False
+
         for token,params in messages:
             settings_backup=copy.copy(settings)
-            if token=="text":
-                if not self.sendMessageText(to, subject, params):
-                    return False
-            if token=="graph":
+            
+            if isinstance(params,dict):
                 settings.update(params)
+
+            mode=settings.msg_mode
+            kwargs = {
+                        "disable_web_page_preview": settings.disable_web_page_preview, 
+                        "disable_notification"    : settings.disable_notification, 
+                     }
+
+            if mode!=None:
+                kwargs['parse_mode']=mode
+
+            message=self.formatMsg(subject, 
+                                   ("",params)[isinstance(params,str)],
+                                   separator=(" : ","")[isinstance(params,str)]
+                                  )
+
+            if token=="text":
+                logger.debug("Send message")
+                logger.debug("      to: {}".format(to))
+                logger.debug(" message: {}".format(message))
+                msg=bot.sendMessage(to,message,**kwargs)
+
+            if token=="graph":
                 imageURL=self.getPhotoFromZabbix(params)
-                if imageURL:
-                    if not self.sendPhoto(to,subject,imageURL):
-                        return False
+                logger.debug("Send photo")
+                logger.debug("      to: {}".format(to))
+                logger.debug(" subject: {}".format(subject))
+                logger.debug("imageURL: {}".format(imageURL))
+                with open(imageURL, 'rb') as f:
+                    msg=bot.sendPhoto(to,photo=f,caption=message,**kwargs)
                 #clear temp image file
                 os.remove(imageURL)
             settings=settings_backup
         return True
-
-    def sendPhoto(self, to, subject, imageURL):
-        global settings
-
-        logger.debug("Send photo")
-        logger.debug("      to: {}".format(to))
-        logger.debug(" subject: {}".format(subject))
-        logger.debug("imageURL: {}".format(imageURL))
-
-
-        mode=settings.msg_mode
-        if mode==TG_MSG_MODE_HTML:
-            subject=self.formatMsgAsHTML(subject,separator="")
-        elif mode==TG_MSG_MODE_MARKDOWN:
-            subject=self.formatMsgAsMarkdown(subject,separator="")
-        else:
-            pass
-        
-        # https://core.telegram.org/bots/api#sendphoto
-        url = self.getAPI() + "/sendPhoto"
-        params = { "chat_id": to, 
-                   "caption": subject, 
-                   "disable_notification": settings.disable_notification,
-                 }
-        if mode==TG_MSG_MODE_HTML or mode==TG_MSG_MODE_MARKDOWN:
-            params["parse_mode"]=mode
-
-        files = {"photo": open(imageURL, 'rb')}
-        logger.debug("files={}".format(files))
-        answer = requests.post(url, params=params, files=files)
-        self.last_result = answer
-        res=answer.status_code == 200
-        logger.debug("HTTP return code: {}".format(answer.status_code))
-        if not res:
-            logger.error("HTTP code: {}".format(answer.status_code))
-            logger.error("     desc: {}".format(answer.text))
-            logger.error(answer)
-        return res
-
-    def sendMessageText(self, to, subject, text):
-        global settings
-        logger.debug("Send simple text")
-        logger.debug("      to: {}".format(to))
-        logger.debug(" subject: {}".format(subject))
-        logger.debug("    text: {}".format(text))
-
-        url = self.getAPI() + "/sendMessage"
-        
-        mode=settings.msg_mode
-        if mode==TG_MSG_MODE_HTML:
-            message=self.formatMsgAsHTML(subject,text)
-        elif mode==TG_MSG_MODE_MARKDOWN:
-            message=self.formatMsgAsMarkdown(subject,text)
-        else:
-            message = "[{0}]:\n{1}".format(subject,text)
-
-        ## https://core.telegram.org/bots/api
-        params = {"chat_id": to,
-                  "text"   : message, 
-                  "disable_web_page_preview": settings.disable_web_page_preview, 
-                  "disable_notification"    : settings.disable_notification, 
-                 }
-        if mode==TG_MSG_MODE_HTML or mode==TG_MSG_MODE_MARKDOWN:
-            params["parse_mode"]=mode
-
-        answer = requests.post(url, params=params)
-        self.last_result = answer
-        res=answer.status_code == 200
-        logger.debug("HTTP return code: {}".format(answer.status_code))
-        if not res:
-            logger.error("HTTP code: {}".format(answer.status_code))
-            logger.error("     desc: {}".format(answer.text))
-            logger.error(answer)
-        return res
-
-
-class Zbx2Tg(object):
-
-    isInited = False
-
-    def __init__(self, debug=False):
-        global logger
-        #
-        log_file = "{0}/{1}.log".format(zbxtg_settings.zbxtg_log_dir, zbxtg_settings.zbxtg_keyword)
-        logging.basicConfig(level=(logging.INFO,logging.DEBUG)[debug])
-        self.toDebug = debug
-        logger = logging.getLogger("Zbx2Tg")
-        # create file handler which logs even debug messages
-        # fh = logging.FileHandler(log_file)
-        fh = logging.handlers.RotatingFileHandler(log_file, mode='a', maxBytes=10*1024*1024, backupCount=5, encoding=None, delay=0)
-        fh.setLevel((logging.INFO,logging.DEBUG)[debug])
-        # create console handler with a higher log level
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.ERROR)
-        # create formatter and add it to the handlers
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        fh.setFormatter(formatter)
-        ch.setFormatter(formatter)
-        # add the handlers to the logger
-        logger.addHandler(fh)
-        logger.addHandler(ch)
-        logger.debug("Starting Zbx2Tg script...")
-        #
-        self.isInited = True
 
     def Process(self,args):
 
@@ -378,9 +328,7 @@ class Zbx2Tg(object):
         zbx_to = args[1]
         zbx_subject = args[2]
         zbx_text = args[3]
-        #
-        tg = TelegramAPI(zbxtg_settings.botAPIkey)
-        res=tg.sendMessage(zbx_to,zbx_subject,zbx_text)
+        res=self.sendMessage(zbx_to,zbx_subject,zbx_text)
         settings=settings_backup
         return res
 

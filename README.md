@@ -15,7 +15,10 @@ but script is fully rewritten/made simpler to meet own needs.
 ## Configuration / Installation
 
 1. Install `requests` python module:</br>
-   ```pip install requests```
+   ```python
+   pip install requests
+   pip install python-telegram-bot
+   ```
 2. Put next files in your `AlertScriptsPath` directory (you can find this path in your **zabbix_server.conf**, by default
   `/usr/lib/zabbix/alertscripts` ):
    * **zbxtg.py** - main script
