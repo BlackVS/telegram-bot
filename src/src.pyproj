@@ -22,6 +22,7 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="locks.py" />
     <Compile Include="zbxtg.py" />
     <Compile Include="zbxtg_bot.py">
       <SubType>Code</SubType>
