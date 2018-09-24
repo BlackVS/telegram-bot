@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{d1f2f0b2-1267-4570-b567-e345db0549a6}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>zbxtg_bot.py</StartupFile>
+    <StartupFile>bot\tg_bot.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -22,13 +22,32 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="locks.py" />
+    <Compile Include="bot\locks.py" />
+    <Compile Include="bot\plugins\zabbix\__init__.py" />
+    <Compile Include="bot\plugins\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="bot\tg_helpers.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="bot\tg_settings.py" />
     <Compile Include="zbxtg.py" />
-    <Compile Include="zbxtg_bot.py">
+    <Compile Include="bot\tg_bot.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="zbxtg_settings.py" />
     <Compile Include="zbxtg_test.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="bot\" />
+    <Folder Include="bot\plugins\" />
+    <Folder Include="bot\plugins\routeros\" />
+    <Folder Include="bot\plugins\zabbix\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="bot\tg_settings.template" />
+    <Content Include="zbxtg_message_templates.txt" />
+    <Content Include="zbxtg_settings.template" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

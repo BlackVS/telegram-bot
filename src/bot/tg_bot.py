@@ -2,34 +2,18 @@
 # -*- coding: utf-8 -*-
 
 import os, sys, signal
-import functools
+#from collections import *
+## 3rd party
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-import logging
-import logging.handlers
 import locks
-#
-import zbxtg_settings
 
-logger = None
-debug = None
+## my
+import tg_settings
+from tg_helpers import *
 
-def getLoggerName():
-    return zbxtg_settings.zbxtg_keyword+"_bot"
+## plugins
+import plugins
 
-# Define a few command handlers. These usually take the two arguments bot and
-# update. Error handlers also receive the raised TelegramError object in error.
-
-def log(func):
-    logger = logging.getLogger(getLoggerName())
-    @functools.wraps(func)
-    def decorator(self, *args, **kwargs):
-        logger.debug('>>> Entering: %s', func.__name__)
-        result = func(self, *args, **kwargs)
-        logger.debug(result)
-        logger.debug('<<< Exiting: %s', func.__name__)
-        return result
-
-    return decorator
 
 ## Commands
 COMMANDS=dict()
@@ -81,11 +65,78 @@ def error(bot, update, error):
 
 
 
+#def test():
+#    # Create ZabbixAPI class instance
+#    zapi = ZabbixAPI(url=tg_settings.zabbix_server, user=tg_settings.zabbix_api_user, password=tg_settings.zabbix_api_pass)
+
+#    ## Get all monitored hosts
+#    #result1 = zapi.host.get(monitored_hosts=1, output='extend')
+
+#    ## Get all disabled hosts
+#    #result2 = zapi.do_request('host.get',
+#    #                          {
+#    #                              'filter': {'status': 1},
+#    #                              'output': 'extend'
+#    #                          })
+
+#    ## Filter results
+#    #hostnames1 = [host['host'] for host in result1]
+#    #hostnames2 = [host['host'] for host in result2['result']]
+#    # res=zapi.do_request('problem.get', { "output": "extend" })
+#    # res=zapi.host.get(monitored_hosts=1, output='extend')
+#    triggers=zapi.trigger.get(  only_true = 1,
+#                                filter = { 'value': 1 },
+#                                skipDependent = 1,
+#                                monitored = 1,
+#                                active = 1,
+#                                output = 'extend',
+#                                #expandDescription = 1,
+#                                #expandData = 'host',
+#                                selectHosts=['host'],
+#                                withLastEventUnacknowledged = 1
+#                             )
+
+#    problems=zapi.do_request('problem.get', 
+#                         {  "output"     : "extend",
+#                            #"selectTags" : "extend",
+#                            #"selectHosts": ['Host','Name'],
+#                            "recent"     : "false",
+#                            "sortfield"  : ["eventid"],
+#                            "sortorder"  : "DESC"
+#                          }
+#                       )
+
+#    res=problems['result']
+#    if len(res):
+#        for p in problems['result']:
+#            event=zapi.item.get(eventids = [p["eventid"]],
+#                                 selectHosts = ["host","name"], 
+#                                 #select_alerts = "extend",
+#                                 #selectTags = "extend",
+#                                 output = ["lastvalue","name"], 
+#                                 monitored = 1)
+#            print(event)
+#        #res = zapi.host.get(monitored_hosts=1, output='extend');
+#        #hosts=defaultdict(lambda:None)
+#        #for r in res:
+#        #    hosts[r['hostid']]=r
+#        #    print(r)
+#        #print(hosts)
+#        #print(problems)
+#        #for p in problems:
+#        #    print(">> {} /n {} /n".format(p,hosts[p.]))
 
 def main():
+    #test()
+    #print(plugins.zabbix.get_description())
+    for n,p in plugins.items():
+        msg="Plugin {}='{}' loaded".format(n,p.get_description())
+        logger.warning(msg)
+    return
+
     """Start the bot."""
     # Create the EventHandler and pass it your bot's token.
-    updater = Updater(zbxtg_settings.botAPIkey)
+    updater = Updater(tg_settings.botAPIkey)
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
@@ -125,7 +176,7 @@ def initLogger():
 
         try:
             logger_name=getLoggerName()
-            log_file = "{0}/{1}.log".format(zbxtg_settings.zbxtg_log_dir, logger_name)
+            log_file = "{0}/{1}.log".format(tg_settings.tg_log_dir, logger_name)
             logging.basicConfig(level=(logging.INFO,logging.DEBUG)[debug])
             logger = logging.getLogger(logger_name)
             # create file handler which logs even debug messages
@@ -154,12 +205,12 @@ def initLogger():
 
 if __name__ == '__main__':
     debug=False
-    if hasattr(zbxtg_settings,"debug"):
-        debug=zbxtg_settings.debug
+    if hasattr(tg_settings,"debug"):
+        debug=tg_settings.debug
     if "--debug" in sys.argv:
         debug=True
 
-    fname="{}/{}_bot.lock".format(zbxtg_settings.zbxtg_tmp_dir, zbxtg_settings.zbxtg_keyword)
+    fname="{}/{}_bot.lock".format(tg_settings.tg_tmp_dir, tg_settings.tg_keyword)
     try:
         initLogger()
         logger.debug("Checking if script already run...")

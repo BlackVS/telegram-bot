@@ -107,3 +107,4 @@ venv.bak/
 .vs/
 zbxtg_settings_test.py
 zbxtg_settings.py
+tg_settings.py
