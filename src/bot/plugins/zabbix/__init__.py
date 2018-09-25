@@ -1,6 +1,8 @@
 import sys
 from tg_helpers import *
 
+commands=dict()
+
 @export
 @log
 def get_description():

@@ -4,6 +4,8 @@
 import os, sys, signal
 #from collections import *
 ## 3rd party
+import telegram
+from collections import defaultdict
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import locks
 
@@ -16,12 +18,27 @@ import plugins
 
 
 ## Commands
-COMMANDS=dict()
-def command(cmd):
+## (func,help,show in help)
+COMMANDS=defaultdict(lambda:None)
+def command(cmd,help,f):
     def wrap(func):
-        COMMANDS[cmd]=func
+        COMMANDS[cmd]=(func,help,f)
         return func
     return wrap
+
+    def decorator(func):
+        COMMANDS[cmd]=(func,help,f)
+        return func
+    return decorator
+
+def commandext(cmd,help,f):
+    def actual_decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(cmd,*args,**kwargs)
+        COMMANDS[cmd]=(wrapper,help,f)
+        return wrapper
+    return actual_decorator
 
 MESSAGE_HANDLER=None
 def message_handler(func):
@@ -29,28 +46,23 @@ def message_handler(func):
     MESSAGE_HANDLER=func
     return func
 
-@command("start")
+@command("start","start conversation with bot",True)
 @log
 def cmd_start(bot, update):
     update.message.reply_text('Awaiting orders.')
 
-@command("hi")
+@command("hi","greetings to bot",True)
 @log
 def cmd_start(bot, update):
     update.message.reply_text('Hello {}'.format(update.message.from_user.name))
-
-@command("help")
-@log
-def cmd_help(bot, update):
-    update.message.reply_text("I don't want to do that!")
 
 @message_handler
 @log
 def cmd_echo(bot, update):
     update.message.reply_text("WHAT {} ???".format(update.message.text))
 
-@command("shutdown")
-@command("kill")
+@command("shutdown","shutdown bot",True)
+@command("kill","shutdown bot",True)
 @log
 def cmd_shutdown(bot, update):
     update.message.reply_text('As you wish. Killing bot...')
@@ -63,6 +75,34 @@ def error(bot, update, error):
     """Log Errors caused by Updates."""
     logger.error('Update "%s" caused error "%s"', update, error)
 
+@command("plugins","work with plugins",True)
+@log
+def cmd_plugins(bot, update):
+    msg="*Available plugins:*"
+    for n,p in plugins.items():
+        msg+="\n{}(_'{}'_)".format(n,p.get_description())
+    update.message.reply_markdown(msg)
+    return    
+
+@commandext("help","get help on commands",True)
+@log
+def cmd_help(cmd, bot, update, *args, **kwargs):
+    text=update.message.text[len(cmd)+1:].strip()
+    if not text:
+        msg="*Available commands:*\n"
+        msg+=" ".join(cmd for cmd,(func,help,f) in COMMANDS.items() if f)
+    else:
+        if not COMMANDS[text]:
+            msg="Wrong command syntax\nUse */help*/ or */help command*"
+        else:
+            msg="*/{}* : {}".format(text,COMMANDS[text][1])
+    update.message.reply_markdown(msg)
+    return    
+
+@log
+def call_plugin(cmd, bot, update):
+    update.message.reply_markdown("Yep... not yet....")
+    return    
 
 
 #def test():
@@ -128,11 +168,6 @@ def error(bot, update, error):
 
 def main():
     #test()
-    #print(plugins.zabbix.get_description())
-    for n,p in plugins.items():
-        msg="Plugin {}='{}' loaded".format(n,p.get_description())
-        logger.warning(msg)
-    return
 
     """Start the bot."""
     # Create the EventHandler and pass it your bot's token.
@@ -144,10 +179,14 @@ def main():
     # on different commands - answer in Telegram
     print(dir())
 
-    for cmd,func in COMMANDS.items():
+    for cmd,(func,help,f) in COMMANDS.items():
         dp.add_handler(CommandHandler(cmd, func))
-    #dp.add_handler(CommandHandler("start", cmd_start))
-    #dp.add_handler(CommandHandler("help", cmd_help))
+
+    #register plugins commands
+    for n,p in plugins.items():
+        #dp.add_handler(CommandHandler(n, call_plugin))
+        dp.add_handler(CommandHandler(n, commandext(n,p.get_description(),True)(call_plugin)))
+        
 
     if MESSAGE_HANDLER:
         dp.add_handler(MessageHandler(Filters.text, MESSAGE_HANDLER))
