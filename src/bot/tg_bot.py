@@ -2,18 +2,16 @@
 # -*- coding: utf-8 -*-
 
 import os, sys, signal
-#from collections import *
+from collections import defaultdict
+
 ## 3rd party
 import telegram
-from collections import defaultdict
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import locks
 
 ## my
 import tg_settings
 from tg_helpers import *
-
-## plugins
 import plugins
 
 
@@ -79,8 +77,8 @@ def error(bot, update, error):
 @log
 def cmd_plugins(bot, update):
     msg="*Available plugins:*"
-    for n,p in plugins.items():
-        msg+="\n{}(_'{}'_)".format(n,p.get_description())
+    for n,(p,d) in plugins.items():
+        msg+="\n{}(_'{}'_)".format(n,d)
     update.message.reply_markdown(msg)
     return    
 
@@ -101,7 +99,25 @@ def cmd_help(cmd, bot, update, *args, **kwargs):
 
 @log
 def call_plugin(cmd, bot, update):
-    update.message.reply_markdown("Yep... not yet....")
+    plugin=plugins.get(cmd)
+    if plugin==None:
+        update.message.reply_markdown("Yep... not yet....")
+        return
+    text=update.message.text[len(cmd)+1:].strip()
+    res=None
+    try:
+        res=plugin.process(cmd,text)
+    except Exception as inst:
+        #logger.warning("Failed to lock file: is seems to be script already running")
+        logger.error(type(inst))
+        logger.error(inst.args)
+        logger.error(inst)
+        update.message.reply_text("Failed to call plugin. Check logs")
+        raise
+    if isinstance(res,str):
+        update.message.reply_text(res)
+    else:
+        update.message.reply_text("Unsupported result: {}".format(type(res)))
     return    
 
 
@@ -183,9 +199,9 @@ def main():
         dp.add_handler(CommandHandler(cmd, func))
 
     #register plugins commands
-    for n,p in plugins.items():
+    for n,(p,d) in plugins.items():
         #dp.add_handler(CommandHandler(n, call_plugin))
-        dp.add_handler(CommandHandler(n, commandext(n,p.get_description(),True)(call_plugin)))
+        dp.add_handler(CommandHandler(n, commandext(n,d,True)(call_plugin)))
         
 
     if MESSAGE_HANDLER:

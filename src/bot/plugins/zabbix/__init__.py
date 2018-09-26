@@ -1,19 +1,6 @@
-import sys
-from tg_helpers import *
+from ..plugincore import *
 
-commands=dict()
-
-@export
-@log
-def get_description():
-	return "Zabbix module"
-
-@export
-@log
-def get_commands():
-	return []
-
-@export
-@log
-def get_help(command):
-	return ""
+@register_plugin("zbx","Zabbix plugin")
+class ZabbixPlugin(PluginCore):
+    def __init__(self, *args, **kwds):
+        pass
