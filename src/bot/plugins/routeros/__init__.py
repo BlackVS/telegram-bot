@@ -1,7 +1,7 @@
 from ..plugincore import *
 
-@register_plugin("zbx","Zabbix plugin")
-class ZabbixPlugin(PluginCore):
+@register_plugin("ccr","RouterOS plugin")
+class RouterOSPlugin(PluginCore):
     def __init__(self, *args, **kwds):
         pass
 
@@ -12,15 +12,16 @@ class ZabbixPlugin(PluginCore):
                 True)
     def cmd_help(self,cmd,args=None):
         return super().cmd_help(cmd,args)
-    
+
     @log
     @plugin_command("status",
-                "get Zabbix server status",
+                "get Mikrotik routers status",
                 ("Usage:\n"
-                 "`/zbx status` - status of all monitored Zabbix servers\n"
-                 "`/zbx status server` - status of specific server\n"
+                 "`/ccr status` - status of all monitored routers\n"
+                 "`/ccr status router` - status of specific router\n"
                 ),
                 True)
 
     def cmd_status(self,cmd,args=None):
         return "Not implemented"
+

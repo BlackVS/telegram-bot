@@ -93,7 +93,7 @@ def cmd_help(cmd, bot, update, *args, **kwargs):
         if not COMMANDS[text]:
             msg="Wrong command syntax\nUse */help*/ or */help command*"
         else:
-            msg="*/{}* : {}".format(text,COMMANDS[text][1])
+            msg="*/{0}* : {1}. Run `/{0} help` to get detailed help on command usage".format(text,COMMANDS[text][1])
     update.message.reply_markdown(msg)
     return    
 
@@ -115,9 +115,9 @@ def call_plugin(cmd, bot, update):
         update.message.reply_text("Failed to call plugin. Check logs")
         raise
     if isinstance(res,str):
-        update.message.reply_text(res)
+        update.message.reply_markdown(res)
     else:
-        update.message.reply_text("Unsupported result: {}".format(type(res)))
+        update.message.reply_markdown("Unsupported result: {}".format(type(res)))
     return    
 
 
