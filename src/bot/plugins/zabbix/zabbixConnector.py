@@ -34,8 +34,10 @@ class ZabbixConnector:
                                     expandDescription = 1,
                                     #expandData = 'host',
                                     selectHosts=['host'],
-                                    withLastEventUnacknowledged = 1
-                                 )
+                                    withLastEventUnacknowledged = 1,
+                                    sortfield = ["priority", "hostname", "lastchange"],
+                                    sortorder = "DESC",
+                                )
         res=""
         for t in triggers:
             p=int(t['priority'])
