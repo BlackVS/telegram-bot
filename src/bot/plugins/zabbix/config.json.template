@@ -1,0 +1,22 @@
+{
+ "server1":
+  {
+	"description" : "Zabbix server in ...",
+	"keyword": "zbx1",
+	"url" : "http://zabbix1",
+	"ip" : "10.10.10.1",
+	"api_user" : "api", 
+	"api_pass" : "pa$$w0rd1",
+	"zabbix_api_verify" : false
+  },
+  "server2":
+  {
+	"description" : "Zabbix server in ...",
+	"keyword": "zbx2",
+	"url" : "http://zabbix2",
+	"ip" : "10.10.10.2",
+	"api_user" : "api", 
+	"api_pass" : "pa$$w0rd2",
+	"zabbix_api_verify" : false
+  }
+}	

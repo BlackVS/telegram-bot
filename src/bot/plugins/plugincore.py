@@ -1,5 +1,8 @@
+import os
+import json
 from collections import defaultdict
 from tg_helpers import *
+from tg_logger import *
 
 ## common for all plugin modules
 def register_plugin(name,desc):
@@ -13,31 +16,56 @@ def register_plugin(name,desc):
 
 ## Commands
 ## (func,help,show in help)
-## COMMANDS=defaultdict(lambda:None)
+
+COMMANDS_DIRECT=defaultdict(lambda:None)
 
 ## own for each plugin module
-def plugin_command(cmd,desc,help,f):
+def plugin_command(cmd,desc,help,fAll,fObject):
     def actual_decorator(func):
         mod = sys.modules[func.__module__]
         if not hasattr(mod, 'COMMANDS'):
             mod.COMMANDS = defaultdict(lambda:None)
-        mod.COMMANDS[cmd]=(func,desc,help,f)
+        mod.COMMANDS[cmd]=(func,desc,help,fAll,fObject)
         return func
     return actual_decorator
 
 class PluginCore:
+    config=dict()
 
-    def __init__(self, *args, **kwds):
-        pass
+    def read_config(self, path):
+        #read config
+        try:
+            logger.debug("Parsing config file (json)...")
+            path=os.path.join(path,'config.json')
+            with open(path) as f:
+                self.config = json.load(f)
+        except Exception as inst:
+            logger.error(type(inst))
+            logger.error(inst.args)
+            logger.error(inst)
+            self.config=None
+            raise
+        finally:
+            logger.debug("JSON succesfully parsed.")
+            for section,cfg in self.config.items():
+                logger.debug("{} : {}".format(section,cfg))
+            mod = sys.modules[self.__module__]
+            for name,cfg in self.config.items():
+                mod.PLUGINS[name]=( self, "Invoke direct commands to {}".format(cfg['name'] ) )
 
-    def cmd_help(self,cmd,args=None):
+    def cmd_help(self,object,cmd,args=None):
         mod = sys.modules[self.__module__]
         if not hasattr(mod, 'COMMANDS'):
             return "No commands defined"
 
         if not args:
             msg="*Available commands:*\n"
-            msg+="\n".join( "*{}* : {}".format(c,desc) for c,(func,desc,help,f) in mod.COMMANDS.items() if f)
+            if object in self.config:
+                #object specific commands
+                msg+="\n".join( "*{}* : {}".format(c,desc) for c,(func,desc,help,fAll,fObject) in mod.COMMANDS.items() if fObject)
+            else:
+                #general plugin commands
+                msg+="\n".join( "*{}* : {}".format(c,desc) for c,(func,desc,help,fAll,fObject) in mod.COMMANDS.items() if fAll)
         else:
             p=mod.COMMANDS[args[0]]
             if not p:
@@ -47,7 +75,7 @@ class PluginCore:
         return msg
 
     @log
-    def process(self,plugin,cmd):
+    def process(self,object,cmd):
         if not cmd:
             return cmd_help()
         keywords=cmd.split()
@@ -62,5 +90,5 @@ class PluginCore:
         if c==None:
             return "Unknown keyword `{}`".format(keywords[0])
         if 'help' in keywords[1:]:
-            return self.cmd_help('help', [ keywords[0] ])
-        return c[0](self,keywords[0],keywords[1:])
+            return self.cmd_help(object,'help', [ keywords[0] ])
+        return c[0](self,object,keywords[0],keywords[1:])

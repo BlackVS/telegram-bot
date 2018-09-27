@@ -31,6 +31,7 @@ for entry in res:
             __all__.append(entry)
             if hasattr(module, 'PLUGINS'):
                 __plugins__.update(module.PLUGINS)
+
         except Exception as inst:
             pass
 

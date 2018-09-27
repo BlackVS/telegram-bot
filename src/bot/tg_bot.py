@@ -4,6 +4,7 @@
 import os, sys, signal
 from collections import defaultdict
 
+
 ## 3rd party
 import telegram
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
@@ -12,6 +13,8 @@ import locks
 ## my
 import tg_settings
 from tg_helpers import *
+
+from tg_logger import *
 import plugins
 
 
@@ -90,7 +93,10 @@ def cmd_help(cmd, bot, update, *args, **kwargs):
         msg="*Available commands:*\n"
         msg+=" ".join(cmd for cmd,(func,help,f) in COMMANDS.items() if f)
     else:
-        if not COMMANDS[text]:
+        if text=='full':
+            msg="*Available commands:*\n"
+            msg+="\n".join( "*{}* : {}".format(cmd,help) for cmd,(func,help,f) in COMMANDS.items() if f)
+        elif not COMMANDS[text]:
             msg="Wrong command syntax\nUse */help*/ or */help command*"
         else:
             msg="*/{0}* : {1}. Run `/{0} help` to get detailed help on command usage".format(text,COMMANDS[text][1])
@@ -119,68 +125,6 @@ def call_plugin(cmd, bot, update):
     else:
         update.message.reply_markdown("Unsupported result: {}".format(type(res)))
     return    
-
-
-#def test():
-#    # Create ZabbixAPI class instance
-#    zapi = ZabbixAPI(url=tg_settings.zabbix_server, user=tg_settings.zabbix_api_user, password=tg_settings.zabbix_api_pass)
-
-#    ## Get all monitored hosts
-#    #result1 = zapi.host.get(monitored_hosts=1, output='extend')
-
-#    ## Get all disabled hosts
-#    #result2 = zapi.do_request('host.get',
-#    #                          {
-#    #                              'filter': {'status': 1},
-#    #                              'output': 'extend'
-#    #                          })
-
-#    ## Filter results
-#    #hostnames1 = [host['host'] for host in result1]
-#    #hostnames2 = [host['host'] for host in result2['result']]
-#    # res=zapi.do_request('problem.get', { "output": "extend" })
-#    # res=zapi.host.get(monitored_hosts=1, output='extend')
-#    triggers=zapi.trigger.get(  only_true = 1,
-#                                filter = { 'value': 1 },
-#                                skipDependent = 1,
-#                                monitored = 1,
-#                                active = 1,
-#                                output = 'extend',
-#                                #expandDescription = 1,
-#                                #expandData = 'host',
-#                                selectHosts=['host'],
-#                                withLastEventUnacknowledged = 1
-#                             )
-
-#    problems=zapi.do_request('problem.get', 
-#                         {  "output"     : "extend",
-#                            #"selectTags" : "extend",
-#                            #"selectHosts": ['Host','Name'],
-#                            "recent"     : "false",
-#                            "sortfield"  : ["eventid"],
-#                            "sortorder"  : "DESC"
-#                          }
-#                       )
-
-#    res=problems['result']
-#    if len(res):
-#        for p in problems['result']:
-#            event=zapi.item.get(eventids = [p["eventid"]],
-#                                 selectHosts = ["host","name"], 
-#                                 #select_alerts = "extend",
-#                                 #selectTags = "extend",
-#                                 output = ["lastvalue","name"], 
-#                                 monitored = 1)
-#            print(event)
-#        #res = zapi.host.get(monitored_hosts=1, output='extend');
-#        #hosts=defaultdict(lambda:None)
-#        #for r in res:
-#        #    hosts[r['hostid']]=r
-#        #    print(r)
-#        #print(hosts)
-#        #print(problems)
-#        #for p in problems:
-#        #    print(">> {} /n {} /n".format(p,hosts[p.]))
 
 def main():
     #test()
@@ -225,49 +169,10 @@ def touch(path):
     with open(path, 'a'):
         os.utime(path, None)
 
-def initLogger():
-        global logger
-        global debug
-
-        try:
-            logger_name=getLoggerName()
-            log_file = "{0}/{1}.log".format(tg_settings.tg_log_dir, logger_name)
-            logging.basicConfig(level=(logging.INFO,logging.DEBUG)[debug])
-            logger = logging.getLogger(logger_name)
-            # create file handler which logs even debug messages
-            # fh = logging.FileHandler(log_file)
-            #if not os.path.isfile(log_file):
-            #    touch(log_file)
-            fh = logging.handlers.RotatingFileHandler(log_file, mode='a', maxBytes=10*1024*1024, backupCount=5, encoding=None, delay=0)
-            fh.setLevel((logging.INFO,logging.DEBUG)[debug])
-            # create console handler with a higher log level
-            ch = logging.StreamHandler()
-            ch.setLevel(logging.ERROR)
-            # create formatter and add it to the handlers
-            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-            fh.setFormatter(formatter)
-            ch.setFormatter(formatter)
-            # add the handlers to the logger
-            logger.addHandler(fh)
-            logger.addHandler(ch)
-            logger.debug("Starting Zbx2Tg script...")
-        except Exception as inst:
-            logger.warning("Failed to lock file: is seems to be script already running")
-            #logger.error(type(inst))
-            #logger.error(inst.args)
-            #logger.error(inst)
-            raise
 
 if __name__ == '__main__':
-    debug=False
-    if hasattr(tg_settings,"debug"):
-        debug=tg_settings.debug
-    if "--debug" in sys.argv:
-        debug=True
-
     fname="{}/{}_bot.lock".format(tg_settings.tg_tmp_dir, tg_settings.tg_keyword)
     try:
-        initLogger()
         logger.debug("Checking if script already run...")
         logger.debug(" testing lock of "+fname)
         with open(fname, 'wb') as f:

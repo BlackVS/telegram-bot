@@ -7,11 +7,12 @@ class RouterOSPlugin(PluginCore):
 
     @log
     @plugin_command("help",
-                "get detailed help for command",
-                "",
-                True)
-    def cmd_help(self,cmd,args=None):
-        return super().cmd_help(cmd,args)
+                    "get detailed help for command",
+                    "",
+                    True, False)
+    def cmd_help(self,object,cmd,args=None):
+        return super().cmd_help(object,cmd,args)
+
 
     @log
     @plugin_command("status",
@@ -20,8 +21,7 @@ class RouterOSPlugin(PluginCore):
                  "`/ccr status` - status of all monitored routers\n"
                  "`/ccr status router` - status of specific router\n"
                 ),
-                True)
-
-    def cmd_status(self,cmd,args=None):
+                True, True)
+    def cmd_status(self,object,cmd,args=None):
         return "Not implemented"
 
