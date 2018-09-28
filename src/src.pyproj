@@ -29,9 +29,7 @@
     <Compile Include="bot\plugins\routeros\__init__.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="bot\plugins\zabbix\zabbixConnector.py">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="bot\plugins\zabbix\zabbixconnector.py" />
     <Compile Include="bot\plugins\zabbix\__init__.py" />
     <Compile Include="bot\plugins\__init__.py">
       <SubType>Code</SubType>

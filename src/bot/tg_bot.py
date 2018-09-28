@@ -120,10 +120,13 @@ def call_plugin(cmd, bot, update):
         logger.error(inst)
         update.message.reply_text("Failed to call plugin. Check logs")
         raise
-    if isinstance(res,str):
-        update.message.reply_markdown(res)
-    else:
-        update.message.reply_markdown("Unsupported result: {}".format(type(res)))
+    if not isinstance(res,list):
+        res=[res]
+    for r in res:
+        if isinstance(r,str):
+            update.message.reply_markdown(r)
+        else:
+            update.message.reply_markdown("Unsupported result: {}".format(type(r)))
     return    
 
 def main():

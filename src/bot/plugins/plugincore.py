@@ -29,8 +29,18 @@ def plugin_command(cmd,desc,help,fAll,fObject):
         return func
     return actual_decorator
 
+def cmd_not_impl(object,cmd,args=None):
+    return "*{}* : `{}` not impelmented".format(object,cmd)
+
+
 class PluginCore:
     config=dict()
+
+    def get_commands(self):
+        mod = sys.modules[self.__module__]
+        if not hasattr(mod, 'COMMANDS'):
+            return None
+        return mod.COMMANDS
 
     def read_config(self, path):
         #read config
@@ -54,20 +64,20 @@ class PluginCore:
                 mod.PLUGINS[name]=( self, "Invoke direct commands to {}".format(cfg['name'] ) )
 
     def cmd_help(self,object,cmd,args=None):
-        mod = sys.modules[self.__module__]
-        if not hasattr(mod, 'COMMANDS'):
+        CMDS=self.get_commands()
+        if CMDS==None:
             return "No commands defined"
 
         if not args:
             msg="*Available commands:*\n"
             if object in self.config:
                 #object specific commands
-                msg+="\n".join( "*{}* : {}".format(c,desc) for c,(func,desc,help,fAll,fObject) in mod.COMMANDS.items() if fObject)
+                msg+="\n".join( "*{}* : {}".format(c,desc) for c,(func,desc,help,fAll,fObject) in CMDS.items() if fObject)
             else:
                 #general plugin commands
-                msg+="\n".join( "*{}* : {}".format(c,desc) for c,(func,desc,help,fAll,fObject) in mod.COMMANDS.items() if fAll)
+                msg+="\n".join( "*{}* : {}".format(c,desc) for c,(func,desc,help,fAll,fObject) in CMDS.items() if fAll)
         else:
-            p=mod.COMMANDS[args[0]]
+            p=CMDS[args[0]]
             if not p:
                 msg="Unknown `{args[0]}`".format()
             else:
@@ -82,13 +92,26 @@ class PluginCore:
         if len(keywords)==0:
             return cmd_help()
 
-        mod = sys.modules[self.__module__]
-        if not hasattr(mod, 'COMMANDS'):
+        msgError="Not supported"
+        CMDS=self.get_commands()
+        if not CMDS:
             return "No commands defined"
 
-        c=mod.COMMANDS[keywords[0]]
+        cmd_key =keywords[0]
+        cmd_args=keywords[1:]
+
+        if cmd_key=='help': #built-in command, list all commands
+            return self.cmd_help(object, cmd_key, cmd_args)
+
+        c=CMDS[cmd_key]
         if c==None:
-            return "Unknown keyword `{}`".format(keywords[0])
-        if 'help' in keywords[1:]:
-            return self.cmd_help(object,'help', [ keywords[0] ])
-        return c[0](self,object,keywords[0],keywords[1:])
+            return "Unknown keyword `{}`".format(cmd_key)
+        
+         
+        if object in self.config and c[4]:
+            return c[0](self,object,cmd_key,cmd_args)
+
+        if c[3]:
+            return [ c[0](self,srv,cmd_key,cmd_args) for srv in self.config]
+
+        return msgError

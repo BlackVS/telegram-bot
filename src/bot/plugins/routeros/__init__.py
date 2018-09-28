@@ -6,15 +6,6 @@ class RouterOSPlugin(PluginCore):
         pass
 
     @log
-    @plugin_command("help",
-                    "get detailed help for command",
-                    "",
-                    True, False)
-    def cmd_help(self,object,cmd,args=None):
-        return super().cmd_help(object,cmd,args)
-
-
-    @log
     @plugin_command("status",
                 "get Mikrotik routers status",
                 ("Usage:\n"
@@ -23,5 +14,5 @@ class RouterOSPlugin(PluginCore):
                 ),
                 True, True)
     def cmd_status(self,object,cmd,args=None):
-        return "Not implemented"
+        return self.cmd_not_impl(object,cmd,args)
 
