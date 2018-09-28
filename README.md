@@ -3,8 +3,8 @@
 Expandable Telegram bot
 
 ## Features
-- [x] support plugins (Zabbix, RouterOS from box)
-- [x] control devices via Telegram (for example, request status of Zabbix or switch routes in RouterOS)
+- [x] supports plugins (Zabbix, RouterOS from box)
+- [x] controls/requests devices via Telegram using expandable plugin system (for example, request status of Zabbix or switch routes in RouterOS)
 
 ## Configuration / Installation
 
