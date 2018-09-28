@@ -87,10 +87,10 @@ class PluginCore:
     @log
     def process(self,object,cmd):
         if not cmd:
-            return cmd_help()
+            return cmd_help(self,object,'help')
         keywords=cmd.split()
         if len(keywords)==0:
-            return cmd_help()
+            return cmd_help(self,object,'help')
 
         msgError="Not supported"
         CMDS=self.get_commands()
