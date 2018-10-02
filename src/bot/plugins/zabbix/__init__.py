@@ -54,3 +54,19 @@ class ZabbixPlugin(PluginCore):
                 return ZBX.get_dashboard(self.config[object],args)
         return cmd_not_impl(object,cmd,args)
 
+    @log
+    @plugin_command("graph",
+                "access graphs",
+                ("Usage:\n"
+                 "`/zbx graph` - list of available graphs (or their qunitity if more 10)\n"
+                 "`/zbx graph filter=text` - get lost of graph with _text_ in name\n"
+                 "`/zbx graph id` - get graph by numeric id\n"
+                 "`/zbx graph id=fav` - remember graph with `id` as 'fav` shortname"
+                 "`/zbx graph fav` - get graph by short name (if exists)"
+                ),
+                False, 
+                True)
+    def cmd_graph(self,object,cmd,args=None):
+        if object in self.config:
+            return ZBX.get_graph(object,cmd,self.config[object],args)
+        return cmd_not_impl(object,cmd,args)

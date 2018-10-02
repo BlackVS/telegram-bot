@@ -1,4 +1,5 @@
 from pyzabbix import ZabbixAPI
+import argparse
 
 PRIORITIES=["   ", "INFO", "WARN", "AVER", "HIGH", "CRIT"]
 
@@ -22,6 +23,19 @@ WIDGETTYPE = {
                     "url":  "URL", 
                     "webovr":  "Web monitoring",
                 }
+
+
+class TGMarkupHelpFormatter(argparse.HelpFormatter):
+    def add_usage(self, usage, actions, groups, prefix=None):
+        if prefix is None:
+            prefix = 'Usage: '
+        return super().add_usage( usage, actions, groups, prefix)
+    def _format_action(self, action):
+            return super()._format_action(action)
+    def _format_action_invocation(self, action):
+        res=super()._format_action_invocation(action)
+        return "`{}`".format(res)
+
 
 class ZabbixConnector:
     @staticmethod
@@ -64,21 +78,20 @@ class ZabbixConnector:
         return res
 
     @staticmethod
-    def get_dashboard(cfg,args):
+    def get_graph(object,cmd,cfg,args):
         zapi = ZabbixAPI(url=cfg['url'], user=cfg['api_user'], password=cfg['api_pass'])
         v=zapi.api_version()
-        id=args[0]
-        try:
-            boards=zapi.dashboard.get(dashboardids = [ id ],
-                                     output = 'extend',
-                                     selectWidgets = 'extend',
-                                     selectUsers = 'extend',
-                                     selectUserGroups = 'extend',
-                                  )
-        except Exception as inst:
-            return "API not supports this feature"
-        if not boards:
-            return "Dashboard with id={} not found".format(id)
-        res="*Available widgets for dashboard {}:\n*".format(id)
-        res+="\n".join( "{} : {} {}".format(w['widgetid'], w['type'], w['name']) for w in boards[0]['widgets'] )
+        parser = argparse.ArgumentParser(prog="*/{} {}*".format(object,cmd),
+                                         description="Invoke Zabbix graphs related commands",
+                                         formatter_class=TGMarkupHelpFormatter
+                                         )
+        parser._optionals.title="*Options:*"
+        parser.add_argument("-l","--list", action='store_true', help="get list of available graphs")
+
+
+        if not args:
+            res=parser.format_help()
+            #format_usage
+        res=res.replace('[','\[')
+        #res=res.replace(']','\]')
         return res
