@@ -7,7 +7,6 @@ import logging
 import logging.handlers
 import json
 import copy
-from collections import defaultdict
 #
 import zbxtg_settings
 #

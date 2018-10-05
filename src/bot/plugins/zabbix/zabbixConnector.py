@@ -78,7 +78,7 @@ class ZabbixConnector:
         return res
 
     @staticmethod
-    def get_graph(object,cmd,cfg,args):
+    def get_graph_list(object,cmd,cfg,args):
         zapi = ZabbixAPI(url=cfg['url'], user=cfg['api_user'], password=cfg['api_pass'])
         v=zapi.api_version()
         parser = argparse.ArgumentParser(prog="*/{} {}*".format(object,cmd),

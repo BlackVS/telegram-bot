@@ -55,18 +55,26 @@ class ZabbixPlugin(PluginCore):
         return cmd_not_impl(object,cmd,args)
 
     @log
-    @plugin_command("graph",
-                "access graphs",
-                ("Usage:\n"
-                 "`/zbx graph` - list of available graphs (or their qunitity if more 10)\n"
-                 "`/zbx graph filter=text` - get lost of graph with _text_ in name\n"
-                 "`/zbx graph id` - get graph by numeric id\n"
-                 "`/zbx graph id=fav` - remember graph with `id` as 'fav` shortname"
-                 "`/zbx graph fav` - get graph by short name (if exists)"
-                ),
-                False, 
-                True)
+    @plugin_command("graph", "access graphs",   
+                    ("Usage:\n"
+                     "`/zbx graph <subcmd> <options>` - invoke subcommands\n"
+                    ),
+                    False, True #only local
+                    )
+    @plugin_subcommand("list1", None, None, "get list 1 of available graphs", "/graph list1", ZBX.get_graph_list)
+    @plugin_subcommand("list2", None, None, "get list 2 of available graphs", "/graph list2", ZBX.get_graph_list)
+    @plugin_subcommand("list3", None, None, "get list 3 of available graphs", "/graph list3", ZBX.get_graph_list)
+    @plugin_subcommand("get",  ["-g","--get"], int, "get specific graph by graphid", "/graph get id", None ) #ZBX.get_graph_get
     def cmd_graph(self,object,cmd,args=None):
+        if not args:
+            subcmd=help
+        else:
+            subcmd=args[0]
+        if subcmd=='help':
+            return self.cmd_help(object.cmd,args)
+
+        #check if local command
         if object in self.config:
             return ZBX.get_graph(object,cmd,self.config[object],args)
-        return cmd_not_impl(object,cmd,args)
+        #call as global
+        return ZBX.get_graph(object,cmd,self.config,args)

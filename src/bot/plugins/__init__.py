@@ -1,10 +1,9 @@
 import os
 from tg_helpers import *
 import importlib
-from collections import defaultdict
 
 __all__ = []
-__plugins__=defaultdict(lambda:None)
+__plugins__=dict()
 
 @export
 #@log
@@ -13,7 +12,7 @@ def items():
 
 @export
 def get(str):
-    p=__plugins__[str]
+    p=__plugins__.get(str,None)
     return p[0] if p else p
 
 ####### find and register plugins

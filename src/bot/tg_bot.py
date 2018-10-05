@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os, sys, signal
-from collections import defaultdict
-
+import os
+import sys
+import signal
 
 ## 3rd party
 import telegram
@@ -20,7 +20,7 @@ import plugins
 
 ## Commands
 ## (func,help,show in help)
-COMMANDS=defaultdict(lambda:None)
+COMMANDS=dict()
 def command(cmd,help,f):
     def wrap(func):
         COMMANDS[cmd]=(func,help,f)
