@@ -9,28 +9,15 @@ class ZabbixPlugin(PluginCore):
         self.read_config(os.path.dirname(os.path.realpath(__file__)))
 
     @log
-    @plugin_command("status",
-                "get Zabbix server status",
-                ("Usage:\n"
-                 "`/zbx status` - status of all monitored Zabbix servers\n"
-                 "`/zbx status server` - status of specific server\n"
-                ),
-                True, 
-                True)
+    @plugin_command("status", "get Zabbix server status", True, True)
     def cmd_status(self,object,cmd,args=None):
-        if object in self.config:
-            return ZBX.get_status(self.config[object])
-        return self.cmd_not_impl(object,cmd,args)
+        if self.isSpecificObject(object):
+            return ZBX.get_status(self.config[object])  # status of concrete server
+        return None #invoke built-in all plugin call
 
     @log
-    @plugin_command("list",
-                "print list of monitored servers",
-                ("Usage:\n"
-                 "`/zbx list` - list of all monitored Zabbix servers\n"
-                ),
-                True, 
-                False)
-    def cmd_list(self,object,cmd,args=None):
+    @plugin_command("list", "print list of monitored servers", True, False)
+    def cmd_list_global(self,object,cmd,args=None):
         msg="Monitorred servers:\n"
         for n,cfg in self.config.items():
             msg+="*{}* : {}:{} _{}_\n".format(n,cfg['name'],cfg['ip'],cfg['description'])
@@ -38,15 +25,8 @@ class ZabbixPlugin(PluginCore):
 
 
     @log
-    @plugin_command("dashboard",
-                "access dashboards",
-                ("Usage:\n"
-                 "`/zbx dashboard` - list of available dashboards\n"
-                 "`/zbx dashboard id` - get specific dashboard\n"
-                ),
-                False, 
-                True)
-    def cmd_graph(self,object,cmd,args=None):
+    @plugin_command("dashboard", "access dashboards", False, True)
+    def cmd_dashboard(self,object,cmd,args=None):
         if object in self.config:
             if not args:
                 return ZBX.get_dashboard_list(self.config[object])
@@ -55,26 +35,26 @@ class ZabbixPlugin(PluginCore):
         return cmd_not_impl(object,cmd,args)
 
     @log
-    @plugin_command("graph", "access graphs",   
-                    ("Usage:\n"
-                     "`/zbx graph <subcmd> <options>` - invoke subcommands\n"
-                    ),
-                    False, True #only local
-                    )
-    @plugin_subcommand("list1", None, None, "get list 1 of available graphs", "/graph list1", ZBX.get_graph_list)
-    @plugin_subcommand("list2", None, None, "get list 2 of available graphs", "/graph list2", ZBX.get_graph_list)
-    @plugin_subcommand("list3", None, None, "get list 3 of available graphs", "/graph list3", ZBX.get_graph_list)
-    @plugin_subcommand("get",  ["-g","--get"], int, "get specific graph by graphid", "/graph get id", None ) #ZBX.get_graph_get
-    def cmd_graph(self,object,cmd,args=None):
-        if not args:
-            subcmd=help
-        else:
-            subcmd=args[0]
+    @plugin_command("graph", "access graphs", False, True )
+    @plugin_subcommand("list", "get list of available graphs" , "/graph list _options_", ZBX.graph_list)
+    @plugin_subcommand("get",  "get specific graph by graphid", "/graph get id",         ZBX.graph_get) 
+    @plugin_option("filter", "-f", str, "filter graphs by mask in name")
+    #@plugin_option("filter", ["-f","--filter"], str, "filter graphs by mask in name")
+    #@plugin_option("filter1", ["-f"], None, "filter graphs by mask in name")
+    #@plugin_option("filter2", None, str, "filter graphs by mask in name")
+    #@plugin_option("cnt", None, int, "only first X results, by default 10")
+    def cmd_graph(self,object,cmd,subcmd,args=None):
+        if not subcmd:
+            subcmd='help'
         if subcmd=='help':
-            return self.cmd_help(object.cmd,args)
+            return self.cmd_help(object,cmd)
 
-        #check if local command
-        if object in self.config:
-            return ZBX.get_graph(object,cmd,self.config[object],args)
+        #get graphs for specific server
+        if self.isSpecificObject(object):
+            p=self.get_subcommand(subcmd)
+            if not p:
+                return cmd_not_impl(object,cmd,args)
+            res=p[0](object,cmd,self.config[object],args)
+            return res if res!=None else cmd_not_impl(object,cmd,args)
         #call as global
-        return ZBX.get_graph(object,cmd,self.config,args)
+        return cmd_not_impl(object,cmd,args) #not supported as wide plugin command

@@ -1,5 +1,4 @@
 from pyzabbix import ZabbixAPI
-import argparse
 
 PRIORITIES=["   ", "INFO", "WARN", "AVER", "HIGH", "CRIT"]
 
@@ -23,19 +22,6 @@ WIDGETTYPE = {
                     "url":  "URL", 
                     "webovr":  "Web monitoring",
                 }
-
-
-class TGMarkupHelpFormatter(argparse.HelpFormatter):
-    def add_usage(self, usage, actions, groups, prefix=None):
-        if prefix is None:
-            prefix = 'Usage: '
-        return super().add_usage( usage, actions, groups, prefix)
-    def _format_action(self, action):
-            return super()._format_action(action)
-    def _format_action_invocation(self, action):
-        res=super()._format_action_invocation(action)
-        return "`{}`".format(res)
-
 
 class ZabbixConnector:
     @staticmethod
@@ -62,7 +48,7 @@ class ZabbixConnector:
         return res
 
     @staticmethod
-    def get_dashboard_list(cfg):
+    def get_dashboard(cfg):
         zapi = ZabbixAPI(url=cfg['url'], user=cfg['api_user'], password=cfg['api_pass'])
         v=zapi.api_version()
         try:
@@ -78,20 +64,13 @@ class ZabbixConnector:
         return res
 
     @staticmethod
-    def get_graph_list(object,cmd,cfg,args):
+    def graph_list(object,cmd,cfg,args):
         zapi = ZabbixAPI(url=cfg['url'], user=cfg['api_user'], password=cfg['api_pass'])
         v=zapi.api_version()
-        parser = argparse.ArgumentParser(prog="*/{} {}*".format(object,cmd),
-                                         description="Invoke Zabbix graphs related commands",
-                                         formatter_class=TGMarkupHelpFormatter
-                                         )
-        parser._optionals.title="*Options:*"
-        parser.add_argument("-l","--list", action='store_true', help="get list of available graphs")
+        return None
 
-
-        if not args:
-            res=parser.format_help()
-            #format_usage
-        res=res.replace('[','\[')
-        #res=res.replace(']','\]')
-        return res
+    @staticmethod
+    def graph_get(object,cmd,cfg,args):
+        zapi = ZabbixAPI(url=cfg['url'], user=cfg['api_user'], password=cfg['api_pass'])
+        v=zapi.api_version()
+        return None

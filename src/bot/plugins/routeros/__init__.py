@@ -6,13 +6,7 @@ class RouterOSPlugin(PluginCore):
         pass
 
     @log
-    @plugin_command("status",
-                "get Mikrotik routers status",
-                ("Usage:\n"
-                 "`/ccr status` - status of all monitored routers\n"
-                 "`/ccr status router` - status of specific router\n"
-                ),
-                True, True)
+    @plugin_command("status", "get Mikrotik routers status", True, True)
     def cmd_status(self,object,cmd,args=None):
-        return self.cmd_not_impl(object,cmd,args)
+        return cmd_not_impl(object,cmd,args)
 
