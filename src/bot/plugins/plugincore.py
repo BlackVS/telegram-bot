@@ -20,7 +20,7 @@ def plugin_command(cmd,desc,fAll,fObject):
         mod = sys.modules[func.__module__]
         if not hasattr(mod, 'COMMANDS'):
             mod.COMMANDS = dict()
-        mod.COMMANDS[cmd]=(func,desc,None,fAll,fObject)
+        mod.COMMANDS[cmd]=(func,desc,fAll,fObject)
         return func
     return actual_decorator
 
@@ -40,15 +40,16 @@ def plugin_subcommand(subcmd,
 
 ## each plugin command may have subcommands
 def plugin_option(option,   # option key/name
-                  flags,    # None or list of flags like ['-l','--list']. 
+                  desc,     # Command description
+                  flags=None,    # None or list of flags like ['-l','--list']. 
                             # If none then "/object command option=value" or "/object command option value" style is used
                             # If it is then "/object command flag value" or "/object command flag=value" style used
                             # /zbx graph list -f=Windows
                             # /zbx graph list -f Windows
                             # /zbx graph list filter=Windows
                             # /zbx graph list filter Windows
-                  arg_type, # None if just switch (in such case True or False will be), int, str, list of choices if value required
-                  desc,     # Command description
+                  arg_type=None, # None if just switch (in such case True or False will be), int, str, list of choices if value required
+                  default_value=None, # None or default value
                  ):
     def wrapper(func):
         nonlocal flags
@@ -56,7 +57,7 @@ def plugin_option(option,   # option key/name
             func.OPTIONS = dict()
         if isinstance(flags,str):
             flags=[flags]
-        func.OPTIONS[option]=(flags,arg_type,desc)
+        func.OPTIONS[option]=(desc,flags,arg_type,default_value)
         return func
     return wrapper #return wrapper - used only in declarations
 
@@ -72,7 +73,13 @@ class PluginCore:
         mod = sys.modules[self.__module__]
         if not hasattr(mod, 'COMMANDS'):
             return None
-        return mod.COMMANDS
+        return  mod.COMMANDS
+
+    def get_command(self,cmd):
+        mod = sys.modules[self.__module__]
+        if not hasattr(mod, 'COMMANDS'):
+            return None
+        return  mod.COMMANDS.get(cmd, (None,None,None,None))
 
     #must be called from @plugin_command wrapped functions
     def get_subcommand(self,subcmd):
@@ -112,54 +119,51 @@ class PluginCore:
     def get_cmd_help(self,object,cmd):
         if not cmd:
             return None
-        CMDS=self.get_commands()
-        if CMDS==None:
-            return "No commands defined"
-        p=CMDS[cmd]
-        if not p:
+        cmd_func,desc,fAll,fObject=self.get_command(cmd)
+        if cmd_func==None:
             return "Unknown command `{}`".format(cmd)
-        cmd_func,desc,help,fAll,fObject=p
         msg=("*Usage:*\n"
              "`/{} {} cmd options` , where\n\n"
              "*cmd* - subcommand:\n"
              .format(object,cmd)
              )
         
-        if cmd_func.SUBCOMMANDS:
+        if hasattr(cmd_func,'SUBCOMMANDS') and cmd_func.SUBCOMMANDS:
             for s,(hook,desc,help) in cmd_func.SUBCOMMANDS.items():
                 msg+="` `_{}_ - {}\n".format(s,desc)
 
-        if cmd_func.OPTIONS:
+        if hasattr(cmd_func,'OPTIONS') and cmd_func.OPTIONS:
             msg+="\n*options* - subcommand options/modifiers:\n"
-            for o,(flags,arg_type,desc) in cmd_func.OPTIONS.items():
-                msg+="\n{}:\n".format(desc)
+            for o,(desc,flags,arg_type,default_value) in cmd_func.OPTIONS.items():
+                full_desc=desc
+                if arg_type!=None:
+                    full_desc="{}, _{}_".format(full_desc,arg_type.__name__)
+                if default_value!=None:
+                    full_desc="{}, by default {}".format(full_desc,default_value)
+                msg+="\n{}:\n".format(full_desc)
+                msg_suffix=""
+                if arg_type!=None:
+                    msg_suffix="`=`_value_"
                 if flags:
-                    if arg_type:
-                        msg+="".join( "` {}=`_value({})_\n".format(f,arg_type.__name__) for f in flags)
-                    else:
-                        msg+="".join( "` {}`\n".format(f) for f in flags)
+                    msg+="".join( "` {}`".format(f)+msg_suffix for f in flags)
                 else:
-                    if arg_type:
-                        msg+="` {}=`_value({})_ \n".format(o,arg_type.__name__)
-                    else:
-                        msg+="` {}`\n".format(o)
-
+                    msg+="` {}`".format(o)+msg_suffix
+                msg+="\n"
         return msg
 
     def cmd_help(self,object,cmd,args=None):
-        CMDS=self.get_commands()
-        if CMDS==None:
-            return "No commands defined"
-
         #help for plugin/server
         if cmd=='help': 
+            CMDS=self.get_commands()
+            if not CMDS:
+                return "No commands defined"
             msg="*Available commands:*\n"
             if object in self.config:
                 #object specific commands
-                msg+="\n".join( "*{}* : {}".format(c,desc) for c,(func,desc,help,fAll,fObject) in CMDS.items() if fObject)
+                msg+="\n".join( "*{}* : {}".format(c,desc) for c,(func,desc,fAll,fObject) in CMDS.items() if fObject)
             else:
                 #general plugin commands
-                msg+="\n".join( "*{}* : {}".format(c,desc) for c,(func,desc,help,fAll,fObject) in CMDS.items() if fAll)
+                msg+="\n".join( "*{}* : {}".format(c,desc) for c,(func,desc,fAll,fObject) in CMDS.items() if fAll)
         # help for specific object commands
         else: 
             return self.get_cmd_help(object,cmd)
@@ -172,12 +176,14 @@ class PluginCore:
         options_map2=dict()
         if hasattr(func,"OPTIONS"):
             ### to-do: can be done once and globally
-            for o,(flags,arg_type,desc) in func.OPTIONS.items():
+            for o,(desc,flags,arg_type,default_value) in func.OPTIONS.items():
                 if flags:
                     for f in flags:
                         (options_map1,options_map2)[bool(arg_type)][f]=o
                 else:
                     (options_map1,options_map2)[bool(arg_type)][o]=o
+                if default_value!=None:
+                    options[o]=default_value
         subcmd =None
         for t in terms:
             pos=t.find("=")
@@ -210,9 +216,6 @@ class PluginCore:
             return self.cmd_help(object,'help')
 
         msgError="Not supported"
-        CMDS=self.get_commands()
-        if not CMDS:
-            return "No commands defined"
 
         cmd_key =keywords[0]
         cmd_args=keywords[1:]
@@ -220,29 +223,48 @@ class PluginCore:
         if cmd_key=='help': #built-in command, list all commands
             return self.cmd_help(object, cmd_key, cmd_args)
 
-        c=CMDS.get(cmd_key,None)
-        if c==None:
-            return "Unknown keyword `{}`".format(cmd_key)
+        cmd_func,desc,fAll,fObject=self.get_command(cmd_key)
+        if cmd_func==None:
+            return "Unknown command `{}`".format(cmd)
         
         if cmd_args and cmd_args[0]=='help':
             return self.cmd_help(object, cmd_key, ['help'])
 
-        if object in self.config and c[4]:
-            #local 
-            if not cmd_args:
-                return self.get_cmd_help(object,cmd_key) #return help on usage
-            ##parse args
-            sub_cmd,args=self.parse_args(c[0],cmd_args)
-            if isinstance(args,str): #error parsing
-                return args
-            return c[0](self,object,cmd_key,sub_cmd,args)
+        if not cmd_args and hasattr(cmd_func,'SUBCOMMANDS'):
+            return self.get_cmd_help(object,cmd_key) #return help on subcommands
 
-        if (object not in self.config) and c[3]:
-            #global
-            msg=c[0](self,object,cmd_key,cmd_args)
-            if not msg:
-                return [c[0](self,srv,cmd_key,cmd_args) for srv in self.config]
-            return msg
+        ##parse args
+        sub_cmd,args=self.parse_args(cmd_func,cmd_args)
+        if isinstance(args,str): #error parsing
+            return args
+
+        #call to specific object
+        if object in self.config and fObject:
+            #call root command function if no subcommands defined
+            if not hasattr(cmd_func, 'SUBCOMMANDS'):
+                return cmd_func(self,object,cmd_key,args)
+
+            #try call subcommand
+            hook,*_=cmd_func.SUBCOMMANDS.get(sub_cmd,None)
+            if hook!=None:
+                return hook(self.config[object],args)
+            return msgError
+
+        #wide plugin call
+        if (object not in self.config) and fAll:
+            #call root command function if no subcommands defined
+            if not hasattr(cmd_func, 'SUBCOMMANDS'):
+                msg=cmd_func(self,object,cmd_key,cmd_args)
+                if not msg:
+                    return [cmd_func(self,srv,cmd_key,cmd_args) for srv in self.config]
+                return msg
+            #try call subcommand
+            hook,*_=cmd_func.SUBCOMMANDS.get(sub_cmd,None)
+            if hook!=None:
+                msg=hook(self.config[object],args)
+                if not msg:
+                    return [hook(self.config[srv],args) for srv in self.config]
+                return msg
 
         return msgError
 

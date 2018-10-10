@@ -64,13 +64,13 @@ class ZabbixConnector:
         return res
 
     @staticmethod
-    def graph_list(object,cmd,cfg,args):
+    def graph_list(cfg,args):
         zapi = ZabbixAPI(url=cfg['url'], user=cfg['api_user'], password=cfg['api_pass'])
         v=zapi.api_version()
         return None
 
     @staticmethod
-    def graph_get(object,cmd,cfg,args):
+    def graph_get(cfg,args):
         zapi = ZabbixAPI(url=cfg['url'], user=cfg['api_user'], password=cfg['api_pass'])
         v=zapi.api_version()
         return None
