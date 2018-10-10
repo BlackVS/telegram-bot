@@ -66,11 +66,47 @@ class ZabbixConnector:
     @staticmethod
     def graph_list(cfg,args):
         zapi = ZabbixAPI(url=cfg['url'], user=cfg['api_user'], password=cfg['api_pass'])
-        v=zapi.api_version()
-        return None
+        #v=zapi.api_version()
+        res="*Available graphs:*\n"
+        try:
+            limit_cnt=int(args['cnt'])
+            common_args={ 'templated':False, 'sortfield':'graphid' }
+            graphs_cnt = int(zapi.graph.get(countOutput=True,**common_args))
+            if graphs_cnt>limit_cnt:
+                res+="_({} graphs, show only first {})_\n".format(graphs_cnt,limit_cnt)
+            graphs=zapi.graph.get(output = 'extend',
+                                  expandName = True,
+                                  selectHosts = 'extend',
+                                  limit = limit_cnt,
+                                  **common_args
+                                  )
+        except Exception as inst:
+            return "API not supports this feature"
+        res+="\n".join( "{} : {} - {}".format(g['graphid'],g['hosts'][0]['host'], g['name']) for g in graphs )
+        return res
 
     @staticmethod
     def graph_get(cfg,args):
         zapi = ZabbixAPI(url=cfg['url'], user=cfg['api_user'], password=cfg['api_pass'])
-        v=zapi.api_version()
-        return None
+        #v=zapi.api_version()
+
+			#method = "graph.get"
+			#params = @{
+			#	output = "extend"
+			#	selectTemplates = "extend"
+			#	selectHosts = @(
+			#		"hostid",
+			#		"name"
+			#	)
+			#	selectItems = "extend"
+			#	selectGraphItems = "extend"
+			#	selectGraphDiscovery = "extend"
+			#	expandName = $expandName
+			#	hostids = $HostID
+			#	graphids = $GraphID
+			#	templateids = $TemplateID
+			#	itemids = $ItemID
+			#	sortfield = "name"
+			#}
+
+        return res
