@@ -125,6 +125,9 @@ def call_plugin(cmd, bot, update):
     for r in res:
         if isinstance(r,str):
             update.message.reply_markdown(r)
+        elif isinstance(r,tuple) and r[0]=="photo":
+            with open(r[1], 'rb') as f:
+                update.message.reply_photo(photo=f, timeout=50)
         else:
             update.message.reply_markdown("Unsupported result: {}".format(type(r)))
     return    

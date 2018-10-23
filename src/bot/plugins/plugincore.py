@@ -193,7 +193,7 @@ class PluginCore:
                 #map ->
                 mkey=options_map2.get(key,None)
                 if mkey:
-                    value=t[pos+1:].strip()
+                    value=t[pos+1:].strip(' \t\"')
                     options[mkey]=value
                     continue
                 return (None, "Wrong key `{}`".format(key))

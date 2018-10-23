@@ -42,9 +42,13 @@ class ZabbixPlugin(PluginCore):
     @log
     @plugin_command("graph", "access graphs", False, True )
     @plugin_subcommand("list", "get list of available graphs" , "/graph list _options_", ZBX.graph_list)
-    @plugin_subcommand("get",  "get specific graph by graphid", "/graph get id",         ZBX.graph_get) 
-    @plugin_option("filter", "filter graphs by mask in name","-f", str)
+    @plugin_subcommand("show","show graph/graphs", "/graph show _options_",         ZBX.graph_show) 
+    @plugin_option("filter_by_host", "filter graphs by host name","host", str)
+    @plugin_option("filter_by_name", "filter graphs by graph name","name", str)
     @plugin_option("cnt", "show only first X results", None, int, 10)
+    @plugin_option("graph_width" , "show: graph width", "width" , int, 400)
+    @plugin_option("graph_height", "show: graph height","height", int, 80)
+    @plugin_option("graph_period", "show: graph period","period", int, 8*60*60)
     def cmd_graph(self,object,cmd,options):
         return self.cmd_help(object,cmd)
     
