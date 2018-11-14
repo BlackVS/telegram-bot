@@ -219,7 +219,7 @@ if __name__ == '__main__':
             if fdres: #not run - unlock and re-run as daemon
                 locks.unlock(fd) 
                 logger.debug("dAemonize bot...")
-                with daemon.DaemonContext():
+                with daemon.DaemonContext(files_preserve=logger_handlers):
                     bot()
                 #main()
             locks.unlock(fm)

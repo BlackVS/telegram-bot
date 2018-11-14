@@ -4,6 +4,7 @@ import tg_settings
 
 logger = None
 debug = False
+logger_handlers = []
 
 def getLoggerName():
     return tg_settings.tg_keyword+"_bot"
@@ -24,6 +25,7 @@ def log(func):
 
 def initLogger():
         global logger
+        global logger_handlers
         global debug
 
         if logger!=None:
@@ -55,6 +57,7 @@ def initLogger():
             logger.addHandler(fh)
             logger.addHandler(ch)
             logger.debug("Starting Zbx2Tg script...")
+            logger_handlers = [fh.stream]
         except Exception as inst:
             logger.warning("Failed to create logger")
             logger.error(type(inst))

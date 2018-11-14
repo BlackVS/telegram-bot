@@ -109,7 +109,10 @@ else:
             try:
                 ret = fcntl.flock(f, flags)
                 print(" lock ret={}".format(ret))
-            except:
+            except Exception as inst:
+                print(type(inst))
+                print(inst.args)
+                print(inst)
                 return False
             return not ret
 
