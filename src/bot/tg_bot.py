@@ -4,6 +4,7 @@
 import os
 import sys
 import signal
+import daemon
 
 ## 3rd party
 import telegram
@@ -17,6 +18,8 @@ from tg_helpers import *
 from tg_logger import *
 import plugins
 
+flockm_name="{}/{}_botm.lock".format(tg_settings.tg_tmp_dir, tg_settings.tg_keyword)
+flockd_name="{}/{}_botd.lock".format(tg_settings.tg_tmp_dir, tg_settings.tg_keyword)
 
 ## Commands
 ## (func,help,show in help)
@@ -175,34 +178,56 @@ def touch(path):
     with open(path, 'a'):
         os.utime(path, None)
 
-
-if __name__ == '__main__':
-    fname="{}/{}_bot.lock".format(tg_settings.tg_tmp_dir, tg_settings.tg_keyword)
+def bot():
     try:
+        #reinit logger inside daemon
+        #initLogger()
+        logger=logging.getLogger(getLoggerName())
         logger.debug("Checking if script already run...")
-        logger.debug(" testing lock of "+fname)
-        with open(fname, 'wb') as f:
-            if locks.lock(f, locks.LOCK_EX+locks.LOCK_NB):
-                #with open(fname, 'wb') as ff:
-                #    if not locks.lock(ff, locks.LOCK_EX+locks.LOCK_NB):
-                #        exit(0)
-                #Deamonize in Linux
-                fStop = os.fork()!=0 if hasattr(os, 'fork') else False
-                # fork()==0 - if child
-                # in no fork (Windows) - just continue
-                if fStop: 
-                    # Running as daemon now. PID is fpid
-                    logger.debug("Original process is shutdowning, child will continue")
-                    sys.exit(0)
-                logger.debug("Continue as daemon")
-                main()
-            else:
-                logger.debug("Script already running...")
+        logger.debug(" testing lock of "+flockd_name)
+        f=os.open(flockd_name, os.O_TRUNC | os.O_CREAT | os.O_RDWR)
+        fres=locks.lock(f, locks.LOCK_EX+locks.LOCK_NB)
+        if fres:
+            logger.debug(" bot is not active")
+            main()
+        else:
+            logger.debug("Script already running...")
+    except IOError:
+        logger.debug("Bot is already running")
     except Exception as inst:
         logger.error(type(inst))
         logger.error(inst.args)
         logger.error(inst)
-    finally:
+    else:
         logger.debug("Exiting script and unlocking")
-        os.remove(fname)
+        locks.unlock(f)
+        os.close(f)
+        os.remove(flockd_name)
     logger.debug("Bot is off...")
+
+if __name__ == '__main__':
+    try:
+        logger.debug("Checking if script already run...")
+        logger.debug(" testing lock of "+flockm_name)
+        fm=os.open(flockm_name, os.O_TRUNC | os.O_CREAT | os.O_RDWR)
+        fmres=locks.lock(fm, locks.LOCK_EX+locks.LOCK_NB)
+        print(fmres)
+        if fmres: #main is not run
+            logger.debug(" check if daemon is run: "+flockd_name)
+            fd=os.open(flockd_name, os.O_TRUNC | os.O_CREAT | os.O_RDWR)
+            fdres=locks.lock(fd, locks.LOCK_EX+locks.LOCK_NB)
+            if fdres: #not run - unlock and re-run as daemon
+                locks.unlock(fd) 
+                logger.debug("dAemonize bot...")
+                with daemon.DaemonContext():
+                    bot()
+                #main()
+            locks.unlock(fm)
+        else:
+            logger.debug("main is already running. Exiting")
+    except IOError:
+        logger.debug("Bot is already running")
+    except Exception as inst:
+        logger.error(type(inst))
+        logger.error(inst.args)
+        logger.error(inst)

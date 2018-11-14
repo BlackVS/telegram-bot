@@ -92,6 +92,7 @@ else:
         LOCK_NB = fcntl.LOCK_NB  # non-blocking
         LOCK_EX = fcntl.LOCK_EX
     except (ImportError, AttributeError):
+        print("No fnctl module")
         # File locking is not supported.
         LOCK_EX = LOCK_SH = LOCK_NB = 0
 
@@ -105,9 +106,14 @@ else:
             return True
     else:
         def lock(f, flags):
-            ret = fcntl.flock(_fd(f), flags)
-            return (ret == 0)
+            try:
+                ret = fcntl.flock(f, flags)
+                print(" lock ret={}".format(ret))
+            except:
+                return False
+            return not ret
 
         def unlock(f):
-            ret = fcntl.flock(_fd(f), fcntl.LOCK_UN)
-            return (ret == 0)
+            ret = fcntl.flock(f, fcntl.LOCK_UN)
+            print(" unlock ret={}".format(ret))
+            return not ret
