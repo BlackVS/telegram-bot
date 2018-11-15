@@ -8,6 +8,7 @@ python-telegram-bot = "*"
 py-zabbix = "*"
 requests = "*"
 python-daemon = "*"
+pipenv-to-requirements = "*"
 
 [dev-packages]
 
