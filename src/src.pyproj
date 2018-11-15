@@ -12,8 +12,7 @@
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId />
-    <CommandLineArguments>
-    </CommandLineArguments>
+    <CommandLineArguments>-v</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
@@ -41,12 +40,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="bot\tg_settings.py" />
-    <Compile Include="zbxtg.py" />
     <Compile Include="bot\tg_bot.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="zbxtg_settings.py" />
-    <Compile Include="zbxtg_test.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="bot\" />
@@ -56,8 +52,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="bot\tg_settings.template" />
-    <Content Include="zbxtg_message_templates.txt" />
-    <Content Include="zbxtg_settings.template" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

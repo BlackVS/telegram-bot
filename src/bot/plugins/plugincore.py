@@ -97,6 +97,7 @@ class PluginCore:
 
     def read_config(self, path):
         #read config
+        global logger
         try:
             logger.debug("Parsing config file (json)...")
             path=os.path.join(path,'config.json')

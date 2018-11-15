@@ -19,7 +19,7 @@ def get(str):
 basedir = os.path.dirname(__file__)
 
 res = os.listdir(basedir)
-print(res)
+# print(res)
 for entry in res:
     fullpath = os.path.join(basedir, entry)
     # plugins as .py files or subfolders

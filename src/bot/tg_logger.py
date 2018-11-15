@@ -2,7 +2,24 @@ import logging, logging.handlers
 import functools
 import tg_settings
 
-logger = None
+class _DummyLogger():
+    def __init__(self, fdebug=False):
+        self._debug=fdebug
+
+    def debug(self,msg):
+        if self._debug:
+            print("DEBUG: {}".format(msg))
+
+    def error(self,msg):
+        if self._debug:
+            print("ERROR: {}".format(msg))
+
+    def warning(self,msg):
+        if self._debug:
+            print("WARNING: {}".format(msg))
+
+logger = _DummyLogger(True); #tg_settings.debug)
+
 debug = False
 logger_handlers = []
 
@@ -12,29 +29,26 @@ def getLoggerName():
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
 def log(func):
-    logger = logging.getLogger(getLoggerName())
     @functools.wraps(func)
     def decorator(*args, **kwargs):
+        logger = logging.getLogger(getLoggerName())
         logger.debug('>>> Entering: %s', func.__name__)
         result = func(*args, **kwargs)
-        logger.debug(result)
-        logger.debug('<<< Exiting: %s', func.__name__)
+        logger.debug('<<< Exiting: {}, res={}'.format(func.__name__,result))
         return result
 
     return decorator
 
-def initLogger():
+def initLogger(fdebug=False):
         global logger
         global logger_handlers
         global debug
 
-        if logger!=None:
-            return
-
+        #if logger!=None:
+        #    return
         debug=False
         if hasattr(tg_settings,"debug"):
-            debug=tg_settings.debug
-
+            debug=fdebug or tg_settings.debug
         try:
             logger_name=getLoggerName()
             log_file = "{0}/{1}.log".format(tg_settings.tg_log_dir, logger_name)
@@ -64,5 +78,5 @@ def initLogger():
             logger.error(inst.args)
             logger.error(inst)
             raise
-
-initLogger()
+        return logger
+#initLogger()

@@ -4,19 +4,28 @@
 import os
 import sys
 import signal
-import daemon
+import argparse
+import functools
 
 ## 3rd party
 import telegram
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import locks
 
+# python-daemon not supports Windows
+if not os.name == 'nt':
+    import daemon
+
 ## my
 import tg_settings
 from tg_helpers import *
 
-from tg_logger import *
+import tg_logger
 import plugins
+
+log    = tg_logger.log
+logger = tg_logger.logger
+
 
 flockm_name="{}/{}_botm.lock".format(tg_settings.tg_tmp_dir, tg_settings.tg_keyword)
 flockd_name="{}/{}_botd.lock".format(tg_settings.tg_tmp_dir, tg_settings.tg_keyword)
@@ -146,7 +155,7 @@ def main():
     dp = updater.dispatcher
 
     # on different commands - answer in Telegram
-    print(dir())
+    # print(dir())
 
     for cmd,(func,help,f) in COMMANDS.items():
         dp.add_handler(CommandHandler(cmd, func))
@@ -180,9 +189,6 @@ def touch(path):
 
 def bot():
     try:
-        #reinit logger inside daemon
-        #initLogger()
-        logger=logging.getLogger(getLoggerName())
         logger.debug("Checking if script already run...")
         logger.debug(" testing lock of "+flockd_name)
         f=os.open(flockd_name, os.O_TRUNC | os.O_CREAT | os.O_RDWR)
@@ -207,11 +213,15 @@ def bot():
 
 if __name__ == '__main__':
     try:
+        parser = argparse.ArgumentParser(add_help=True, description='Telegram bot')
+        parser.add_argument("-d", "--daemon", action="store_true", help="run as daemon, only Linux")
+        parser.add_argument("-v", "--verbose", action="store_true", help="detailed/debug log")
+        args = parser.parse_args()
+        logger = tg_logger.initLogger(args.verbose)
         logger.debug("Checking if script already run...")
         logger.debug(" testing lock of "+flockm_name)
         fm=os.open(flockm_name, os.O_TRUNC | os.O_CREAT | os.O_RDWR)
         fmres=locks.lock(fm, locks.LOCK_EX+locks.LOCK_NB)
-        print(fmres)
         if fmres: #main is not run
             logger.debug(" check if daemon is run: "+flockd_name)
             fd=os.open(flockd_name, os.O_TRUNC | os.O_CREAT | os.O_RDWR)
@@ -219,9 +229,14 @@ if __name__ == '__main__':
             if fdres: #not run - unlock and re-run as daemon
                 locks.unlock(fd) 
                 logger.debug("dAemonize bot...")
-                with daemon.DaemonContext(files_preserve=logger_handlers):
+                if args.daemon:
+                    if os.name == 'nt':
+                        logger.warning("daemon mode is not supported in Windows")
+                    else:
+                        with daemon.DaemonContext(files_preserve=tg_logger.logger_handlers):
+                            bot()
+                else:
                     bot()
-                #main()
             locks.unlock(fm)
         else:
             logger.debug("main is already running. Exiting")
