@@ -3,6 +3,11 @@
 BOTDIR=tgbot
 INSTALLDIR=/opt/$BOTDIR
 
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[1;32m'
+NC='\033[0m'
+
 onerror() {
     echo " FAILED, aborting script"
     exit 1
@@ -12,9 +17,9 @@ trap 'onerror' ERR
 
 check() {
     if [ $? -eq 0 ]; then
-        echo OK
+        echo -e "${GREEN}OK${NC}"
     else
-        echo FAIL, aborting script
+        echo -e "${RED}FAIL${NC}, aborting script"
         exit 1
     fi
 }
@@ -25,24 +30,29 @@ function run() {
     check
 }
 
+function print_h1(){
+    echo ""
+    echo -n -e "* ${YELLOW} $@  ${NC}:"
+}
+
 echo "Install bot to: $INSTALLDIR"
 
-echo -n "* creating folder $INSTALLDIR : "
+print_h1 "creating folder $INSTALLDIR"
 
 run sudo mkdir $INSTALLDIR
 run cd $INSTALLDIR
 
-echo "* cloning from git"
+print_h1 "cloning from git"
 run sudo git clone https://github.com/BlackVS/telegram-bot.git .
 
-echo "* switching to dev"
+print_h1 "switching to dev"
 run sudo git checkout dev
 
-echo "* installing python3-pip"
-run sudo apt install python3-pip -y
+print_h1 "installing python3-pip"
+run sudo apt -q install python3-pip -y
 
-echo "* installing pipenv"
-run sudo pip3 install pipenv 
+print_h1 "installing pipenv"
+run sudo pip3 -q install pipenv 
 
-echo "* initializing pipenv"
-run pipenv install --python 3
+print_h1 "initializing pipenv"
+run pipenv --bare install --python 3
