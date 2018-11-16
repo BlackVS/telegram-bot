@@ -46,8 +46,7 @@ function print_h1(){
 }
 
 print_h0 "Installing Telegram bot"
-
-echo "Install bot to: $INSTALLDIR"
+print_h0 "Install bot to: $INSTALLDIR"
 
 print_h1 "creating folder $INSTALLDIR"
 
@@ -61,7 +60,7 @@ print_h1 "switching to dev"
 run sudo git checkout dev
 
 print_h1 "installing python3-pip"
-run sudo apt -qqq install python3-pip -y
+run sudo apt-get -qq install python3-pip -y
 
 print_h1 "installing pipenv"
 run sudo pip3 -q install pipenv 
