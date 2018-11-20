@@ -53,11 +53,11 @@ read -p 'GIT commit EMAIL: ' EMAIL
 run "Install aps" sudo apt -y install git-core fonts-powerline zsh
 
 print_h1 "Install zsh staff for local"
-sh -c "$(wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O -)"
+sh -c "$(wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - |perl -pe 's!(TEST_CURRENT_SHELL=).*!\1zsh!; s!(env zsh.*)!exit!')"
 check
 
 print_h1 "Install zsh staff for root"
-sudo su -c sh -c "$(wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O -)"
+sudo su -c sh -c "$(wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - |perl -pe 's!(TEST_CURRENT_SHELL=).*!\1zsh!; s!(env zsh.*)!exit!')"
 check
 
 cmd="git config --global user.name $UNAME"
