@@ -30,40 +30,42 @@ check() {
     fi
 }
 
-function run() { 
-    # echo $@
-    $@
-    check
-}
-
 function print_h0(){
-    echo -e "* ${WHITE}${BOLD} $@  ${NOBOLD}${NC}:"
+    echo -e "* ${WHITE}${BOLD} $@  ${NOBOLD}${NC}: "
 }
 
 function print_h1(){
     echo ""
-    echo -n -e "* ${YELLOW} $@  ${NC}:"
+    echo -n -e "* ${YELLOW} $@  ${NC}: "
+}
+
+function run() { 
+    print_h1 $1
+    #echo -n \
+    ${@:2}
+    check
 }
 
 print_h0 "Installing Telegram bot"
 print_h0 "Install bot to: $INSTALLDIR"
 
-print_h1 "creating folder $INSTALLDIR"
+run "Creating folder $INSTALLDIR" \
+sudo mkdir $INSTALLDIR
 
-run sudo mkdir $INSTALLDIR
-run cd $INSTALLDIR
+run "Entering $INSTALLDIR" \
+cd $INSTALLDIR
 
-print_h1 "cloning from git"
-run sudo git clone https://github.com/BlackVS/telegram-bot.git .
+run "cloning from git" \
+sudo git clone https://github.com/BlackVS/telegram-bot.git .
 
-print_h1 "switching to dev"
-run sudo git checkout dev
+run "switching to dev" \
+sudo git checkout dev
 
-print_h1 "installing python3-pip"
-run sudo apt-get -qq install python3-pip -y
+run "installing python3-pip" \
+sudo apt-get -qq install python3-pip -y
 
-print_h1 "installing pipenv"
-run sudo pip3 -q install pipenv 
+run "installing pipenv" \
+sudo pip3 -q install pipenv 
 
-print_h1 "initializing pipenv"
-run pipenv --bare install --python 3
+run "initializing pipenv" \
+pipenv --bare install --python 3
