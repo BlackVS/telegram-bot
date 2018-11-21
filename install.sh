@@ -90,17 +90,15 @@ sudo chown -R tgbot:tgbot /tmp/tgbot
 
 echo ""
 print_h0 "Please edit config files:"
-print_h1 " $INSTALLDIR/src/bot/tg_settings.py"
-print_h1 " $INSTALLDIR/src/bot/plugins/zabbix/config.json"
-
-echo ""
+echo " $INSTALLDIR/src/bot/tg_settings.py"
+echo " $INSTALLDIR/src/bot/plugins/zabbix/config.json"
+echo " "
 print_h0 "To check config run bot in verbose console mode:"
 echo " sudo -u tgbot python3 $INSTALLDIR/src/bot/tg_bot.py -v"
 echo " Then check output and try run command /help in bot chat in Telegram"
 echo " If Ok - stop script (/kill) and re-run in daemon mode"
-
+echo " "
 print_h0 "To run in daemon mode:"
 echo " sudo -u tgbot python3 $INSTALLDIR/src/bot/tg_bot.py -d"
-
-echo ""
+echo " "
 print_h0 "The END"
