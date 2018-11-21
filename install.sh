@@ -101,3 +101,5 @@ echo ""
 echo "Then check output and try run command /help in bot chat in Telegram"
 print_h0 "To run in daemon mode:"
 print_h1 " sudo -u tgbot python3 ./src/bot/tg_bot.py -d"
+
+echo "The END"
