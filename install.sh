@@ -64,7 +64,8 @@ cd $INSTALLDIR
 run "switching to dev" \
 sudo git checkout dev
 
-run "installing python3-pip" \
+print_h1n "installing python3-pip"
+run "" \
 sudo apt-get -qq install python3-pip -y 1>/dev/null
 
 run "installing dependencies" \
@@ -74,13 +75,13 @@ run "creating nologin user tgbot" \
 sudo adduser tgbot --system --no-create-home --disabled-login --group
 
 run "creating folder /var/log/tgbot" \
-sudo mkdir /var/log/tgbot
+sudo mkdir -p /var/log/tgbot
 
 run "chown /var/log/tgbot by tgbot user" \
 sudo chown -R tgbot:tgbot /var/log/tgbot
 
 run "creating folder /tmp/tgbot" \
-sudo mkdir /tmp/tgbot
+sudo mkdir -p /tmp/tgbot
 
 run "chown /tmp/tgbot by tgbot user" \
 sudo chown -R tgbot:tgbot /tmp/tgbot
