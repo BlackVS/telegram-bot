@@ -30,16 +30,16 @@ check() {
 }
 
 function print_h0(){
-    echo -e "${WHITE}${BOLD} $@  ${NOBOLD}${NC}"
+    echo -e "${WHITE}${BOLD}$@${NOBOLD}${NC}"
 }
 
 function print_h1(){
-    echo -e "* ${YELLOW} $@  ${NC}: "
+    echo -e " * ${YELLOW}$@${NC} : "
 }
 
 function print_h1n(){
     echo ""
-    echo -n -e "* ${YELLOW} $@  ${NC}: "
+    echo -n -e " * ${YELLOW}$@${NC} : "
 }
 
 function run() { 
@@ -88,6 +88,7 @@ sudo mkdir -p /tmp/tgbot
 run "chown /tmp/tgbot by tgbot user" \
 sudo chown -R tgbot:tgbot /tmp/tgbot
 
+echo ""
 print_h0 "Please edit config files:"
 print_h1 " $INSTALLDIR/src/bot/tg_settings.py"
 print_h1 " $INSTALLDIR/src/bot/plugins/zabbix/config.json"
@@ -97,6 +98,6 @@ print_h0 "To check config run bot in verbose console mode:"
 print_h1 " sudo -u tgbot python3 ./src/bot/tg_bot.py -v"
 
 echo ""
-echo " Check output and try run command /help in bot chat in Telegram"
+echo "Then check output and try run command /help in bot chat in Telegram"
 print_h0 "To run in daemon mode:"
 print_h1 " sudo -u tgbot python3 ./src/bot/tg_bot.py -d"
