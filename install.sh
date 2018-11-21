@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sudo echo Installing Telegram bot
+sudo echo
 
 BOTDIR=tgbot
 INSTALLDIR=/opt/$BOTDIR
@@ -10,7 +10,6 @@ RED='\033[0;31m'
 YELLOW='\033[1;33m'
 GREEN='\033[1;32m'
 NC='\033[0m'
-
 BOLD="\e[1m"
 NOBOLD="\e[21m"
 
@@ -52,11 +51,11 @@ print_h0 "Install bot to: $INSTALLDIR"
 run "Creating folder $INSTALLDIR" \
 sudo mkdir $INSTALLDIR
 
+run "cloning from git" \
+sudo git clone https://github.com/BlackVS/telegram-bot.git $INSTALLDIR
+
 run "Entering $INSTALLDIR" \
 cd $INSTALLDIR
-
-run "cloning from git" \
-sudo git clone https://github.com/BlackVS/telegram-bot.git .
 
 run "switching to dev" \
 sudo git checkout dev
@@ -64,8 +63,30 @@ sudo git checkout dev
 run "installing python3-pip" \
 sudo apt-get -qq install python3-pip -y
 
-run "installing pipenv" \
-sudo pip3 -q install pipenv 
+run "installing dependencies" \
+sudo pip3 install -r requirements.txt
 
-run "initializing pipenv" \
-pipenv --bare install --python 3
+run "creating nologin user tgbot" \
+sudo adduser tgbot --system --no-create-home --disabled-login --group
+
+run "creating folder /var/log/tgbot" \
+sudo mkdir /var/log/tgbot
+
+run "chown /var/log/tgbot by tgbot user" \
+sudo chown -R tgbot:tgbot /var/log/tgbot
+
+run "creating folder /tmp/tgbot" \
+sudo mkdir /tmp/tgbot
+
+run "chown /tmp/tgbot by tgbot user" \
+sudo chown -R tgbot:tgbot /tmp/tgbot
+
+print_h0 "Please edit config files:"
+print_h1 " $INSTALLDIR/src/bot/tg_settings.py"
+print_h1 " $INSTALLDIR/src/bot/plugins/zabbix/config.json"
+
+print_h0 "\nTo check config run bot in verovose console mode:"
+print_h1 " sudo -u tgbot python3 ./src/bot/tg_bot.py -v"
+echo " Check output and try run command /help in bot chat in Telegram"
+print_h0 "\nTo run in daemon mode:"
+print_h1 " sudo -u tgbot python3 ./src/bot/tg_bot.py -d"
