@@ -64,10 +64,11 @@ cd $INSTALLDIR
 run "switching to dev" \
 sudo git checkout dev
 
+echo ""
 print_h1 "installing python3-pip"
 echo ""
-run "" \
 sudo apt-get -qq install python3-pip -y 1>/dev/null
+check
 
 run "installing dependencies" \
 sudo pip3 -q install -r requirements.txt
