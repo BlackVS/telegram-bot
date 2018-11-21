@@ -64,7 +64,7 @@ cd $INSTALLDIR
 run "switching to dev" \
 sudo git checkout dev
 
-print_h1n "installing python3-pip"
+print_h1 "installing python3-pip"
 run "" \
 sudo apt-get -qq install python3-pip -y 1>/dev/null
 
