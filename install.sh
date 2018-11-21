@@ -61,8 +61,8 @@ sudo git clone https://github.com/BlackVS/telegram-bot.git $INSTALLDIR
 run "Entering $INSTALLDIR" \
 cd $INSTALLDIR
 
-run "switching to dev" \
-sudo git checkout dev
+#run "switching to dev" \
+#sudo git checkout dev
 
 echo ""
 print_h1 "installing python3-pip"
