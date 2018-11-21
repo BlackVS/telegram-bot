@@ -34,12 +34,16 @@ function print_h0(){
 }
 
 function print_h1(){
+    echo -e "* ${YELLOW} $@  ${NC}: "
+}
+
+function print_h1n(){
     echo ""
     echo -n -e "* ${YELLOW} $@  ${NC}: "
 }
 
 function run() { 
-    print_h1 $1
+    print_h1n $1
     #echo -n \
     ${@:2}
     check
@@ -61,10 +65,10 @@ run "switching to dev" \
 sudo git checkout dev
 
 run "installing python3-pip" \
-sudo apt-get -qq install python3-pip -y
+sudo apt-get -qq install python3-pip -y 1>/dev/null
 
 run "installing dependencies" \
-sudo pip3 install -r requirements.txt
+sudo pip3 -q install -r requirements.txt
 
 run "creating nologin user tgbot" \
 sudo adduser tgbot --system --no-create-home --disabled-login --group
@@ -85,8 +89,8 @@ print_h0 "Please edit config files:"
 print_h1 " $INSTALLDIR/src/bot/tg_settings.py"
 print_h1 " $INSTALLDIR/src/bot/plugins/zabbix/config.json"
 
-print_h0 "\nTo check config run bot in verovose console mode:"
+print_h0 "To check config run bot in verbose console mode:"
 print_h1 " sudo -u tgbot python3 ./src/bot/tg_bot.py -v"
 echo " Check output and try run command /help in bot chat in Telegram"
-print_h0 "\nTo run in daemon mode:"
+print_h0 "To run in daemon mode:"
 print_h1 " sudo -u tgbot python3 ./src/bot/tg_bot.py -d"
