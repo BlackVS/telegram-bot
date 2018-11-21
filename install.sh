@@ -30,7 +30,7 @@ check() {
 }
 
 function print_h0(){
-    echo -e "* ${WHITE}${BOLD} $@  ${NOBOLD}${NC}: "
+    echo -e "${WHITE}${BOLD} $@  ${NOBOLD}${NC}: "
 }
 
 function print_h1(){
