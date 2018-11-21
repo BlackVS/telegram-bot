@@ -96,9 +96,9 @@ print_h1 " $INSTALLDIR/src/bot/plugins/zabbix/config.json"
 echo ""
 print_h0 "To check config run bot in verbose console mode:"
 echo " sudo -u tgbot python3 $INSTALLDIR/src/bot/tg_bot.py -v"
-
+echo " Then check output and try run command /help in bot chat in Telegram"
 echo ""
-echo "Then check output and try run command /help in bot chat in Telegram"
+
 print_h0 "To run in daemon mode:"
 echo " sudo -u tgbot python3 $INSTALLDIR/src/bot/tg_bot.py -d"
 
